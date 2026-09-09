@@ -1,0 +1,36 @@
+{
+  "nav": {
+    "brand": "SHRAMSETU",
+    "tagline": "Cooperative Workforce Marketplace",
+    "customer": "Customer Portal",
+    "worker": "Worker Dashboard",
+    "cooperative": "Coop Admin",
+    "federation": "State Federation",
+    "services": "Explore Services",
+    "login": "Login",
+    "register": "Join Cooperative"
+  },
+  "hero": {
+    "badge": "Smart India Hackathon 2026 — Verified Trust Platform",
+    "title": "Fair Wages. Verified Trust. Owned by Labour Cooperatives.",
+    "subtitle": "Connecting households and institutions with certified local service workers backed by Section 70 Labour Cooperatives. 0% Middleman Commission.",
+    "bookService": "Book a Verified Worker",
+    "joinWorker": "Join as Cooperative Member"
+  },
+  "features": {
+    "fairMatch": "FairMatch™ 5-Factor Ranking",
+    "fairMatchDesc": "Optimized by GPS proximity, trade skills, and cooperative workload equity.",
+    "doorstepOtp": "Dual-OTP Handshake Security",
+    "doorstepOtpDesc": "Start OTP on doorstep arrival and Completion OTP upon customer satisfaction.",
+    "welfareFund": "Section 70 Welfare Fund",
+    "welfareFundDesc": "7% of every gig goes directly into medical, tool subsidies, and social security."
+  },
+  "trades": {
+    "electrician": "Electrician",
+    "plumber": "Plumber",
+    "carpenter": "Carpenter",
+    "appliance": "Appliance Repair",
+    "painter": "Painter",
+    "cleaner": "House Cleaner"
+  }
+}

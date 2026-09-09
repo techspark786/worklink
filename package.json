@@ -1,0 +1,22 @@
+{
+  "name": "shramsetu",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ShramSetu — Cooperative-Powered Local Workforce & Community Services Marketplace for SIH",
+  "scripts": {
+    "dev:web": "npm run dev --prefix apps/web",
+    "dev:backend": "npm run dev --prefix backend",
+    "build:web": "npm run build --prefix apps/web",
+    "build:backend": "npm run build --prefix backend",
+    "seed": "npm run seed --prefix backend"
+  },
+  "keywords": [
+    "cooperative",
+    "marketplace",
+    "sih2026",
+    "workforce",
+    "ai"
+  ],
+  "author": "ShramSetu Team",
+  "license": "MIT"
+}
