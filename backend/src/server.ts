@@ -10,6 +10,7 @@ import bookingRoutes from './routes/bookingRoutes';
 import federationRoutes from './routes/federationRoutes';
 import { complaintRouter } from './routes/complaintRoutes';
 import { reviewRouter } from './routes/reviewRoutes';
+import aiRoutes from './routes/aiRoutes';
 
 dotenv.config();
 
@@ -41,6 +42,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/federation', federationRoutes);
 app.use('/api/complaints', complaintRouter);
 app.use('/api/reviews', reviewRouter);
+app.use('/api/ai', aiRoutes);
 
 app.listen(PORT, () => {
   console.log(`🚀 [ShramSetu Backend] Server running on http://localhost:${PORT}`);

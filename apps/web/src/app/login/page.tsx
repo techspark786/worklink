@@ -3,30 +3,58 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck, Lock, Mail } from 'lucide-react';
+import { ShieldCheck, Lock, Mail, AlertCircle, RefreshCw } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login, getDashboardUrl } = useAuth();
+
   const [email, setEmail] = useState('customer@shramsetu.in');
   const [password, setPassword] = useState('password');
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg('');
     setLoading(true);
 
-    setTimeout(() => {
-      setLoading(false);
-      if (email.includes('worker')) {
-        router.push('/worker/dashboard');
-      } else if (email.includes('admin')) {
-        router.push('/admin/dashboard');
-      } else if (email.includes('federation')) {
-        router.push('/federation/dashboard');
-      } else {
-        router.push('/customer/dashboard');
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email.trim(),
+          password,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || 'Invalid email or password.');
       }
-    }, 600);
+
+      // Save token and user into AuthContext and localStorage
+      login(data.token, data.user);
+
+      // Navigate to the role-specific dashboard
+      const dashboardUrl = getDashboardUrl(data.user.role);
+      router.push(dashboardUrl);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Invalid email or password.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelectDemoUser = (demoEmail: string) => {
+    setEmail(demoEmail);
+    setPassword('password');
+    setErrorMsg('');
   };
 
   return (
@@ -40,6 +68,13 @@ export default function LoginPage() {
           <p className="text-xs text-slate-500">Access your role-based cooperative portal</p>
         </div>
 
+        {errorMsg && (
+          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-600" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
+
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">Email Address</label>
@@ -50,7 +85,8 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-9 pr-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                placeholder="name@example.com"
+                className="w-full pl-9 pr-4 py-2.5 border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
               />
             </div>
           </div>
@@ -64,7 +100,8 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-9 pr-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                placeholder="••••••••"
+                className="w-full pl-9 pr-4 py-2.5 border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
               />
             </div>
           </div>
@@ -73,19 +110,50 @@ export default function LoginPage() {
           <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-1.5">
             <span className="font-bold text-slate-700 block">⚡ Quick Demo Accounts (Password: password)</span>
             <div className="flex flex-wrap gap-1 text-[11px]">
-              <button type="button" onClick={() => setEmail('customer@shramsetu.in')} className="px-2 py-0.5 bg-white border rounded text-emerald-700 hover:bg-emerald-50">Customer</button>
-              <button type="button" onClick={() => setEmail('worker@shramsetu.in')} className="px-2 py-0.5 bg-white border rounded text-emerald-700 hover:bg-emerald-50">Worker</button>
-              <button type="button" onClick={() => setEmail('admin@shramsetu.in')} className="px-2 py-0.5 bg-white border rounded text-emerald-700 hover:bg-emerald-50">Coop Admin</button>
-              <button type="button" onClick={() => setEmail('federation@shramsetu.in')} className="px-2 py-0.5 bg-white border rounded text-emerald-700 hover:bg-emerald-50">Federation</button>
+              <button
+                type="button"
+                onClick={() => handleSelectDemoUser('customer@shramsetu.in')}
+                className="px-2 py-0.5 bg-white border rounded text-emerald-700 hover:bg-emerald-50 transition-colors"
+              >
+                Customer
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSelectDemoUser('worker@shramsetu.in')}
+                className="px-2 py-0.5 bg-white border rounded text-emerald-700 hover:bg-emerald-50 transition-colors"
+              >
+                Worker
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSelectDemoUser('admin@shramsetu.in')}
+                className="px-2 py-0.5 bg-white border rounded text-emerald-700 hover:bg-emerald-50 transition-colors"
+              >
+                Coop Admin
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSelectDemoUser('federation@shramsetu.in')}
+                className="px-2 py-0.5 bg-white border rounded text-emerald-700 hover:bg-emerald-50 transition-colors"
+              >
+                Federation
+              </button>
             </div>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow transition-colors"
+            className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs sm:text-sm rounded-xl shadow transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
-            {loading ? 'Authenticating...' : 'Sign In'}
+            {loading ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                <span>Authenticating with Database...</span>
+              </>
+            ) : (
+              <span>Sign In</span>
+            )}
           </button>
         </form>
 

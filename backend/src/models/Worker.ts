@@ -2,7 +2,9 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IWorker extends Document {
   userId: mongoose.Types.ObjectId;
-  cooperativeId: mongoose.Types.ObjectId;
+  cooperativeId?: mongoose.Types.ObjectId;
+  profession: string;
+  about?: string;
   skills: string[];
   experienceYears: number;
   certifications: {
@@ -22,6 +24,7 @@ export interface IWorker extends Document {
     latitude: number;
     longitude: number;
     city: string;
+    address?: string;
   };
 }
 
@@ -29,6 +32,8 @@ const WorkerSchema: Schema = new Schema(
   {
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     cooperativeId: { type: Schema.Types.ObjectId, ref: 'Cooperative' },
+    profession: { type: String, default: 'General Maintenance' },
+    about: { type: String, default: '' },
     skills: [{ type: String }],
     experienceYears: { type: Number, default: 1 },
     certifications: [

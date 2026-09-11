@@ -1,4 +1,5 @@
 import { Router, Response } from 'express';
+import mongoose from 'mongoose';
 import Worker from '../models/Worker';
 import User from '../models/User';
 import Cooperative from '../models/Cooperative';
@@ -444,25 +445,69 @@ router.get('/match', async (req, res: Response): Promise<void> => {
   }
 });
 
+// Get Current Logged-in Worker Profile
+router.get('/me', authenticateJWT, async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ message: 'Not authenticated' });
+    return;
+  }
+  try {
+    const worker = await Worker.findOne({ userId: req.user.id })
+      .populate('userId', 'name email phone avatar location')
+      .populate('cooperativeId', 'name city');
+    if (worker) {
+      res.json({ worker });
+      return;
+    }
+  } catch (err) {
+    console.warn('Error fetching worker profile by userId:', err);
+  }
+
+  const memWorker = memoryWorkers.find((w) => w.id === req.user?.id || w.email === req.user?.email);
+  if (memWorker) {
+    res.json({ worker: memWorker });
+    return;
+  }
+
+  res.status(404).json({ message: 'Worker profile not found for authenticated user' });
+});
+
 // Get Single Worker by ID
 router.get('/:id', async (req, res: Response): Promise<void> => {
   const { id } = req.params;
+  if (id === 'me') {
+    res.status(400).json({ message: 'Please use GET /api/workers/me with Authorization token' });
+    return;
+  }
+
   try {
-    try {
-      const dbWorker = await Worker.findById(id).populate('userId', 'name email phone avatar').populate('cooperativeId', 'name city');
-      if (dbWorker) {
-        res.json({ worker: dbWorker });
-        return;
+    let dbWorker = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      dbWorker = await Worker.findById(id)
+        .populate('userId', 'name email phone avatar location')
+        .populate('cooperativeId', 'name city');
+      if (!dbWorker) {
+        dbWorker = await Worker.findOne({ userId: id })
+          .populate('userId', 'name email phone avatar location')
+          .populate('cooperativeId', 'name city');
       }
-    } catch (dbErr) {
-      // Fallback
     }
 
-    const memWorker = memoryWorkers.find((w) => w.id === id || w.email === id);
-    res.json({ worker: memWorker || memoryWorkers[0] });
-  } catch (err) {
-    res.status(500).json({ message: 'Error fetching worker profile', error: (err as Error).message });
+    if (dbWorker) {
+      res.json({ worker: dbWorker });
+      return;
+    }
+  } catch (dbErr) {
+    // Fallback
   }
+
+  const memWorker = memoryWorkers.find((w) => w.id === id || w.email === id);
+  if (memWorker) {
+    res.json({ worker: memWorker });
+    return;
+  }
+
+  res.status(404).json({ message: 'Worker not found' });
 });
 
 // Toggle Worker Availability

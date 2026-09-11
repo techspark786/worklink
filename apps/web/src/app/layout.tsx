@@ -1,6 +1,8 @@
 import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { AuthProvider } from '@/context/AuthContext';
+import AiAssistant from '@/components/AiAssistant';
 
 export const metadata = {
   title: 'SHRAMSETU — Cooperative-Powered Local Services Marketplace',
@@ -15,9 +17,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="flex flex-col min-h-screen">
-        <Navbar />
-        <main className="flex-grow">{children}</main>
-        <Footer />
+        <AuthProvider>
+          <Navbar />
+          <main className="flex-grow">{children}</main>
+          <Footer />
+          <AiAssistant />
+        </AuthProvider>
       </body>
     </html>
   );

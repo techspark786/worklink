@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { 
   ShieldCheck, 
   Wallet, 
@@ -12,16 +13,19 @@ import {
   ToggleLeft, 
   ToggleRight,
   Briefcase,
-  Clock,
-  PhoneCall,
-  Navigation,
-  AlertTriangle,
-  Lock,
-  CheckSquare,
-  Sparkles,
+  Clock, 
+  PhoneCall, 
+  Navigation, 
+  AlertTriangle, 
+  Lock, 
+  CheckSquare, 
+  Sparkles, 
   ArrowRight,
-  Check
+  Check,
+  RefreshCw,
+  Bell
 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 interface ActiveJob {
   id: string;
@@ -42,42 +46,111 @@ interface ActiveJob {
   completionOtp: string;
 }
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+
 export default function WorkerDashboard() {
+  const router = useRouter();
+  const { user, token, isLoading: authLoading } = useAuth();
+
+  const [workerProfile, setWorkerProfile] = useState<any>(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+
   const [isAvailable, setIsAvailable] = useState(true);
-  const [monthlyEarnings, setMonthlyEarnings] = useState(18450);
-  const [welfarePoolBalance, setWelfarePoolBalance] = useState(7128);
-  const [completedJobsCount, setCompletedJobsCount] = useState(142);
+  const [monthlyEarnings, setMonthlyEarnings] = useState(0);
+  const [welfarePoolBalance, setWelfarePoolBalance] = useState(0);
+  const [completedJobsCount, setCompletedJobsCount] = useState(0);
   const [countdown, setCountdown] = useState(45);
 
   // Active Job State
-  const [currentJob, setCurrentJob] = useState<ActiveJob | null>({
-    id: 'b-demo-1',
-    orderNumber: 'ORD-8492',
-    customerName: 'Aarav Sharma',
-    customerPhone: '+91 98765 43210',
-    serviceTitle: 'Ceiling Fan & Switchboard Sparking Fix',
-    serviceCategory: 'Electrical & Power',
-    description: 'Ceiling fan speed controller smoking and buzzing; main bedroom switchboard sparking.',
-    urgency: 'EMERGENCY_45_MIN',
-    address: 'Flat 402, Hazratganj Heights, Hazratganj, Lucknow',
-    distance: '1.8 km',
-    baseWage: 400,
-    welfareCess: 28,
-    totalEarnings: 428,
-    status: 'DISPATCHED',
-    startOtp: '4829',
-    completionOtp: '7103',
-  });
+  const [currentJob, setCurrentJob] = useState<ActiveJob | null>(null);
 
   const [inputStartOtp, setInputStartOtp] = useState('');
   const [inputCompletionOtp, setInputCompletionOtp] = useState('');
   const [otpError, setOtpError] = useState('');
-  const [jobTimer, setJobTimer] = useState(18); // seconds elapsed in progress
+  const [jobTimer, setJobTimer] = useState(0); // seconds elapsed in progress
   const [safetyChecklist, setSafetyChecklist] = useState({
     mcbSwitchedOff: true,
     safetyGlovesWorn: true,
     voltageTested: true,
   });
+
+  // Redirect to login if unauthenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login');
+    }
+  }, [authLoading, user, router]);
+
+  // Load live worker profile and assigned bookings
+  useEffect(() => {
+    if (!token && !user) return;
+
+    async function loadWorkerData() {
+      setLoadingProfile(true);
+      try {
+        // Fetch worker profile
+        const workerRes = await fetch(`${API_BASE_URL}/workers/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        let workerData = null;
+        if (workerRes.ok) {
+          const wData = await workerRes.json();
+          workerData = wData.worker;
+        } else if (user?.workerProfile) {
+          workerData = user.workerProfile;
+        }
+
+        if (workerData) {
+          setWorkerProfile(workerData);
+          setIsAvailable(workerData.isAvailable !== false);
+          setCompletedJobsCount(workerData.totalCompletedJobs || 0);
+          setMonthlyEarnings(workerData.totalCompletedJobs ? workerData.totalCompletedJobs * (workerData.hourlyRate || 350) : 0);
+          setWelfarePoolBalance(workerData.welfareContributionTotal || 0);
+
+          // Fetch active bookings for this worker
+          const workerId = workerData._id || workerData.id;
+          if (workerId) {
+            const bookingsRes = await fetch(`${API_BASE_URL}/bookings?workerId=${workerId}`);
+            if (bookingsRes.ok) {
+              const bData = await bookingsRes.json();
+              if (bData.bookings && bData.bookings.length > 0) {
+                const active = bData.bookings.find(
+                  (b: any) => b.status === 'DISPATCHED' || b.status === 'ASSIGNED' || b.status === 'ARRIVED' || b.status === 'IN_PROGRESS'
+                );
+                if (active) {
+                  setCurrentJob({
+                    id: active._id || active.id,
+                    orderNumber: `ORD-${(active._id || active.id).toString().slice(-4).toUpperCase()}`,
+                    customerName: active.customerId?.name || active.customerName || 'Local Customer',
+                    customerPhone: active.customerId?.phone || active.customerPhone || '+91 98765 43210',
+                    serviceTitle: active.serviceTitle,
+                    serviceCategory: active.serviceCategory,
+                    description: active.description,
+                    urgency: active.urgency,
+                    address: active.customerLocation?.address || 'Doorstep Address, Lucknow',
+                    distance: '2.1 km',
+                    baseWage: active.pricing?.baseWage || 400,
+                    welfareCess: active.pricing?.welfareCess || 28,
+                    totalEarnings: (active.pricing?.baseWage || 400) + (active.pricing?.welfareCess || 28),
+                    status: active.status,
+                    startOtp: active.startOtp || '4829',
+                    completionOtp: active.completionOtp || '7103',
+                  });
+                }
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Error loading worker dashboard data:', err);
+      } finally {
+        setLoadingProfile(false);
+      }
+    }
+
+    loadWorkerData();
+  }, [user, token]);
 
   // Countdown for incoming dispatch
   useEffect(() => {
@@ -102,13 +175,29 @@ export default function WorkerDashboard() {
   }, [currentJob]);
 
   // Handlers
+  const handleToggleAvailability = async () => {
+    const nextStatus = !isAvailable;
+    setIsAvailable(nextStatus);
+    if (workerProfile?._id && token) {
+      try {
+        await fetch(`${API_BASE_URL}/workers/${workerProfile._id}/availability`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ isAvailable: nextStatus }),
+        });
+      } catch (e) {}
+    }
+  };
+
   const handleAcceptGig = () => {
     if (!currentJob) return;
     setCurrentJob({ ...currentJob, status: 'ASSIGNED' });
   };
 
   const handleDeclineGig = () => {
-    // Cooperative member decline without penalty
     setCurrentJob(null);
   };
 
@@ -149,24 +238,54 @@ export default function WorkerDashboard() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const workerName = user?.name || workerProfile?.userId?.name || 'Worker Member';
+  const workerInitials = workerName
+    .split(' ')
+    .map((n: string) => n[0])
+    .join('')
+    .substring(0, 2)
+    .toUpperCase() || 'WM';
+
+  const profession = workerProfile?.profession || user?.workerProfile?.profession || 'General Maintenance';
+  const coopName = workerProfile?.cooperativeId?.name || 'Lucknow Labour Cooperative Society Ltd.';
+  const verificationLevel = workerProfile?.verificationLevel || 2;
+
+  if (authLoading || loadingProfile) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-20 flex flex-col items-center justify-center space-y-3">
+        <RefreshCw className="w-8 h-8 text-emerald-600 animate-spin" />
+        <p className="text-sm font-semibold text-slate-600">Loading worker cooperative profile...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Worker Profile Header */}
       <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-black text-2xl flex items-center justify-center shadow-md">
-            RK
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-black text-2xl flex items-center justify-center shadow-md flex-shrink-0">
+            {workerInitials}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-black text-slate-900">Ramesh Kumar</h1>
+              <h1 className="text-2xl font-black text-slate-900">{workerName}</h1>
               <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Level 4 Verified
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Level {verificationLevel} Verified
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              Certified Electrician | Lucknow Labour Cooperative Society Ltd. (Reg: UP-LKO-COOP-2024-001)
+              Certified {profession} | {coopName}
             </p>
+            {workerProfile?.skills && workerProfile.skills.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {workerProfile.skills.map((sk: string, idx: number) => (
+                  <span key={idx} className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] rounded font-medium">
+                    {sk}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -187,7 +306,7 @@ export default function WorkerDashboard() {
           <div className="flex items-center gap-3 bg-slate-50 p-2 rounded-2xl border border-slate-200">
             <span className="text-xs font-bold text-slate-700">Duty Readiness:</span>
             <button 
-              onClick={() => setIsAvailable(!isAvailable)} 
+              onClick={handleToggleAvailability} 
               className={`flex items-center gap-2 px-3 py-1 rounded-xl font-bold text-xs transition-all shadow-sm border ${
                 isAvailable ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-white border-slate-200 text-slate-500'
               }`}
@@ -208,353 +327,333 @@ export default function WorkerDashboard() {
         </div>
       </div>
 
-      {/* Metrics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-2">
-          <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-semibold">Direct Wallet Earnings</span>
-            <Wallet className="w-5 h-5 text-emerald-600" />
+      {/* Overview Stat Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Monthly Earnings */}
+        <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Net Member Wages</span>
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+              <Wallet className="w-4 h-4" />
+            </div>
           </div>
-          <span className="text-3xl font-black text-slate-900">₹{monthlyEarnings.toLocaleString()}</span>
-          <p className="text-[10px] text-emerald-700 font-semibold">100% Payout Credited Direct to Bank</p>
-        </div>
-
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-2">
-          <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-semibold">7% Cooperative Health Shield</span>
-            <HeartHandshake className="w-5 h-5 text-rose-500" />
-          </div>
-          <span className="text-3xl font-black text-slate-900">₹{welfarePoolBalance.toLocaleString()}</span>
-          <p className="text-[10px] text-slate-500">Cashless Hospital & Accident Cover</p>
-        </div>
-
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-2">
-          <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-semibold">Completed Gigs</span>
-            <Briefcase className="w-5 h-5 text-blue-600" />
-          </div>
-          <span className="text-3xl font-black text-slate-900">{completedJobsCount}</span>
+          <div className="text-2xl font-black text-slate-900">₹{monthlyEarnings.toLocaleString()}</div>
           <p className="text-[10px] text-slate-500">100% Fair Wage Settlement</p>
         </div>
 
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-2">
-          <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-semibold">Member Reputation</span>
-            <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
+        {/* Welfare Health Shield */}
+        <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Health Shield Pool</span>
+            <div className="w-8 h-8 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center">
+              <HeartHandshake className="w-4 h-4" />
+            </div>
           </div>
-          <span className="text-3xl font-black text-slate-900">4.9 / 5</span>
-          <p className="text-[10px] text-slate-500">Based on 118 verified customer ratings</p>
+          <div className="text-2xl font-black text-slate-900">₹{welfarePoolBalance.toLocaleString()}</div>
+          <p className="text-[10px] text-slate-500">7% Cooperative Statutory Cess Credited</p>
+        </div>
+
+        {/* Verified Gigs Completed */}
+        <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Completed Gigs</span>
+            <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center">
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-black text-slate-900">{completedJobsCount}</div>
+          <p className="text-[10px] text-slate-500">100% OTP & Geo-Proof Authenticated</p>
+        </div>
+
+        {/* Member Rating */}
+        <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Member Trust Rating</span>
+            <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+              <Star className="w-4 h-4 fill-amber-400" />
+            </div>
+          </div>
+          <div className="text-2xl font-black text-slate-900">
+            {workerProfile?.rating ? workerProfile.rating.toFixed(1) : '5.0'} / 5.0
+          </div>
+          <p className="text-[10px] text-slate-500">Democratically Reviewed by Customers</p>
         </div>
       </div>
 
-      {/* ACTIVE JOB LIFECYCLE CONTROLLER */}
-      {currentJob ? (
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 space-y-6 shadow-md">
-          {/* Section Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-black text-emerald-600 uppercase tracking-wider">
-                  Live Cooperative Dispatch
-                </span>
-                <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-xs font-bold">
-                  {currentJob.orderNumber}
-                </span>
-                {currentJob.urgency === 'EMERGENCY_45_MIN' && (
-                  <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[10px] font-bold border border-rose-200 animate-pulse">
-                    ⚡ 45-Min Express Dispatch
-                  </span>
-                )}
-              </div>
-              <h2 className="text-xl font-black text-slate-900 mt-1">{currentJob.serviceTitle}</h2>
-              <p className="text-xs text-slate-500">{currentJob.description}</p>
-            </div>
-
-            {/* Payout Tag */}
-            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 text-right shrink-0">
-              <span className="text-[10px] uppercase font-bold text-emerald-800 block">Your Net Earnings</span>
-              <div className="flex items-baseline justify-end gap-1.5">
-                <span className="text-2xl font-black text-emerald-900">₹{currentJob.baseWage}</span>
-                <span className="text-[10px] font-bold text-teal-700">+₹{currentJob.welfareCess} welfare</span>
-              </div>
-            </div>
+      {/* Main Action Workstation Area */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+              <Briefcase className="w-5 h-5 text-emerald-600" /> Active Job Queue & Member Dispatch Station
+            </h2>
+            <p className="text-xs text-slate-500">
+              Cooperative matching dispatches tasks directly to available members without platform exploitation.
+            </p>
           </div>
+        </div>
 
-          {/* STATE 1: DISPATCHED (Accept / Decline Timer) */}
-          {currentJob.status === 'DISPATCHED' && (
-            <div className="p-6 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 text-white space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <span className="px-2.5 py-1 rounded-full bg-amber-400 text-slate-950 text-xs font-black">
-                    ⏱️ Auto-Cascades in {countdown}s
-                  </span>
-                  <h3 className="text-lg font-bold mt-2">New Customer Job Dispatched</h3>
-                  <p className="text-xs text-slate-300">
-                    Customer: <strong>{currentJob.customerName}</strong> ({currentJob.distance} away in {currentJob.address})
-                  </p>
+        {/* Active Job Card or Standby Screen */}
+        {currentJob ? (
+          <div className="bg-white border-2 border-emerald-500/50 rounded-3xl p-6 sm:p-8 shadow-lg space-y-6">
+            {/* Header: Order Info & Status */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="px-3 py-1 rounded-xl bg-slate-900 text-white font-mono font-bold text-xs">
+                  {currentJob.orderNumber}
                 </div>
-
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={handleAcceptGig}
-                    className="px-6 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-sm rounded-2xl transition-all shadow-lg flex items-center gap-2"
-                  >
-                    <CheckCircle2 className="w-5 h-5" /> Accept Gig
-                  </button>
-                  <button
-                    onClick={handleDeclineGig}
-                    className="px-5 py-3.5 bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold text-xs rounded-2xl transition-all"
-                    title="No penalty on cooperative member score"
-                  >
-                    Decline / Pass
-                  </button>
+                <div>
+                  <h3 className="font-black text-lg text-slate-900">{currentJob.serviceTitle}</h3>
+                  <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    {currentJob.serviceCategory}
+                  </span>
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-slate-700/60 text-[11px] text-slate-400 flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>
-                  <strong>Cooperative Non-Coercion Guarantee:</strong> Declining an order does NOT penalize your acceptance score or search ranking.
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1.5 animate-pulse">
+                  <Clock className="w-3.5 h-3.5" />
+                  {currentJob.urgency === 'EMERGENCY_45_MIN' ? '⚡ 45 Min Express Emergency' : 'Standard Same-Day'}
+                </span>
+                <span className="px-3 py-1 rounded-full text-xs font-black bg-slate-100 text-slate-800 uppercase tracking-wider">
+                  Status: {currentJob.status}
                 </span>
               </div>
             </div>
-          )}
 
-          {/* STATE 2: ASSIGNED (En Route) */}
-          {currentJob.status === 'ASSIGNED' && (
-            <div className="p-6 rounded-2xl bg-blue-50 border border-blue-200 space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">
-                    ● En Route to Customer Location
-                  </span>
-                  <h3 className="text-base font-bold text-slate-900 mt-1">Navigate to Customer Doorstep</h3>
-                  <p className="text-xs text-slate-600 flex items-center gap-1">
-                    <MapPin className="w-4 h-4 text-emerald-600" /> {currentJob.address}
+            {/* Problem Description & Customer Location */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Customer Reported Issue</span>
+                  <p className="text-sm text-slate-800 bg-slate-50 p-3 rounded-2xl border border-slate-200 mt-1">
+                    {currentJob.description}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <a
-                    href={`tel:${currentJob.customerPhone}`}
-                    className="px-4 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-colors shadow-sm"
-                  >
-                    <PhoneCall className="w-4 h-4 text-emerald-600" /> Call Customer
-                  </a>
-                  <button
-                    onClick={handleMarkArrived}
-                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all shadow flex items-center gap-1.5"
-                  >
-                    <Navigation className="w-4 h-4" /> I Have Arrived at Doorstep
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* STATE 3: ARRIVED (Start OTP Verification) */}
-          {currentJob.status === 'ARRIVED' && (
-            <div className="p-6 rounded-2xl bg-amber-50 border border-amber-200 space-y-4">
-              <div className="flex items-center gap-2 text-amber-800 font-bold text-sm">
-                <Lock className="w-5 h-5 text-amber-600" />
-                <span>Doorstep Anti-Fraud Handshake: Request Start OTP</span>
-              </div>
-              <p className="text-xs text-slate-600">
-                Ask the customer ({currentJob.customerName}) to look at their ShramSetu app and provide their 4-digit <strong>Start OTP</strong> (Hint for demo: <code>{currentJob.startOtp}</code>).
-              </p>
-
-              <div className="flex flex-col sm:flex-row items-center gap-3">
-                <input
-                  type="text"
-                  maxLength={4}
-                  placeholder="Enter 4-digit OTP"
-                  value={inputStartOtp}
-                  onChange={(e) => setInputStartOtp(e.target.value)}
-                  className="px-4 py-2.5 border border-slate-300 rounded-xl text-center text-lg font-black tracking-widest bg-white outline-none focus:ring-2 focus:ring-amber-500 w-48"
-                />
-                <button
-                  onClick={handleValidateStartOtp}
-                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all shadow"
-                >
-                  Verify Start OTP & Begin Job
-                </button>
-              </div>
-
-              {otpError && (
-                <p className="text-xs font-bold text-rose-600 flex items-center gap-1">
-                  <AlertTriangle className="w-4 h-4" /> {otpError}
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* STATE 4: IN_PROGRESS (Execution Timer & Checklist) */}
-          {currentJob.status === 'IN_PROGRESS' && (
-            <div className="space-y-6">
-              {/* Timer Bar */}
-              <div className="p-4 rounded-2xl bg-slate-900 text-white flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></div>
-                  <div>
-                    <span className="text-[10px] text-slate-400 block font-semibold uppercase">Job In Execution</span>
-                    <span className="text-xl font-black text-emerald-400 font-mono">
-                      ⏱️ {formatTimer(jobTimer)} elapsed
-                    </span>
+                <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200/80 space-y-2">
+                  <span className="text-xs font-bold text-emerald-900 uppercase tracking-wider block">
+                    💰 Member Guaranteed Settlement
+                  </span>
+                  <div className="flex items-center justify-between text-xs text-slate-700">
+                    <span>Base Member Wage (100% Member Share):</span>
+                    <span className="font-bold text-slate-900">₹{currentJob.baseWage}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-slate-700">
+                    <span>Cooperative Health Cess (7% credited to your fund):</span>
+                    <span className="font-bold text-teal-700">+₹{currentJob.welfareCess}</span>
+                  </div>
+                  <div className="pt-2 border-t border-emerald-200 flex items-center justify-between text-sm font-black text-emerald-950">
+                    <span>Total Member Value:</span>
+                    <span>₹{currentJob.totalEarnings}</span>
                   </div>
                 </div>
-                <div className="text-right">
-                  <span className="text-xs text-slate-400">Cooperative Standards Active</span>
-                </div>
               </div>
 
-              {/* Safety & Protocol Checklist */}
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
-                <span className="font-bold text-slate-800 uppercase tracking-wider block text-[10px]">
-                  Mandatory Cooperative Safety Protocols
-                </span>
-                <label className="flex items-center gap-2 text-slate-700 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={safetyChecklist.mcbSwitchedOff}
-                    onChange={(e) => setSafetyChecklist({ ...safetyChecklist, mcbSwitchedOff: e.target.checked })}
-                    className="rounded text-emerald-600 focus:ring-emerald-500"
-                  />
-                  <span>Main Line Power MCB switched off before wire handling</span>
-                </label>
-                <label className="flex items-center gap-2 text-slate-700 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={safetyChecklist.safetyGlovesWorn}
-                    onChange={(e) => setSafetyChecklist({ ...safetyChecklist, safetyGlovesWorn: e.target.checked })}
-                    className="rounded text-emerald-600 focus:ring-emerald-500"
-                  />
-                  <span>ISI-marked insulated tools & rubber footwear utilized</span>
-                </label>
-                <label className="flex items-center gap-2 text-slate-700 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={safetyChecklist.voltageTested}
-                    onChange={(e) => setSafetyChecklist({ ...safetyChecklist, voltageTested: e.target.checked })}
-                    className="rounded text-emerald-600 focus:ring-emerald-500"
-                  />
-                  <span>Earthing and voltage stability verified with tester</span>
-                </label>
-              </div>
-
-              {/* Completion Handshake Box */}
-              <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-4">
-                <div className="flex items-center gap-2 text-emerald-900 font-bold text-sm">
-                  <CheckSquare className="w-5 h-5 text-emerald-600" />
-                  <span>Work Finished: Request Completion OTP from Customer</span>
+              <div className="space-y-4">
+                <div>
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Doorstep Delivery Address</span>
+                  <div className="flex items-start gap-2 text-sm text-slate-800 bg-slate-50 p-3 rounded-2xl border border-slate-200 mt-1">
+                    <MapPin className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold">{currentJob.address}</p>
+                      <span className="text-xs text-slate-500 font-medium">Approx. {currentJob.distance} from your current GPS beacon</span>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-xs text-slate-600">
-                  Demonstrate the working appliance/repair to the customer. Once satisfied, ask for the 4-digit <strong>Completion OTP</strong> (Hint for demo: <code>{currentJob.completionOtp}</code>).
-                </p>
 
-                <div className="flex flex-col sm:flex-row items-center gap-3">
+                <div>
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Customer Contact</span>
+                  <div className="flex items-center justify-between bg-slate-50 p-3 rounded-2xl border border-slate-200 mt-1">
+                    <div>
+                      <p className="font-bold text-slate-900 text-sm">{currentJob.customerName}</p>
+                      <p className="text-xs text-slate-500">{currentJob.customerPhone}</p>
+                    </div>
+                    <a
+                      href={`tel:${currentJob.customerPhone}`}
+                      className="px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-bold text-xs flex items-center gap-1.5 hover:bg-emerald-700 transition-colors shadow-sm"
+                    >
+                      <PhoneCall className="w-3.5 h-3.5" /> Call Customer
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Stage-Based Workflow Controls */}
+            {currentJob.status === 'DISPATCHED' && (
+              <div className="bg-amber-50 border border-amber-200 p-5 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-black">
+                    {countdown}s
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-sm">New Incoming Work Request</h4>
+                    <p className="text-xs text-slate-600">FairMatch matched your verified skills. Accept within timer.</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <button
+                    onClick={handleDeclineGig}
+                    className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold text-xs hover:bg-slate-100"
+                  >
+                    Decline
+                  </button>
+                  <button
+                    onClick={handleAcceptGig}
+                    className="flex-1 sm:flex-none px-6 py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 shadow"
+                  >
+                    Accept Gig
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {currentJob.status === 'ASSIGNED' && (
+              <div className="bg-blue-50 border border-blue-200 p-5 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <h4 className="font-bold text-slate-900 text-sm">Travel to Customer Location</h4>
+                  <p className="text-xs text-slate-600">Proceed to {currentJob.address}. Mark arrived when at door.</p>
+                </div>
+                <button
+                  onClick={handleMarkArrived}
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 shadow flex items-center justify-center gap-2"
+                >
+                  <Navigation className="w-4 h-4" /> I Have Arrived at Location
+                </button>
+              </div>
+            )}
+
+            {currentJob.status === 'ARRIVED' && (
+              <div className="bg-slate-900 text-white p-5 rounded-2xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-sm flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-emerald-400" /> Doorstep Start OTP Verification
+                  </h4>
+                  <span className="text-[10px] text-slate-400 font-mono">Demo OTP Hint: {currentJob.startOtp}</span>
+                </div>
+                <div className="flex gap-3">
                   <input
                     type="text"
                     maxLength={4}
-                    placeholder="Completion OTP"
-                    value={inputCompletionOtp}
-                    onChange={(e) => setInputCompletionOtp(e.target.value)}
-                    className="px-4 py-2.5 border border-slate-300 rounded-xl text-center text-lg font-black tracking-widest bg-white outline-none focus:ring-2 focus:ring-emerald-500 w-48"
+                    placeholder="Enter 4-digit customer OTP"
+                    value={inputStartOtp}
+                    onChange={(e) => setInputStartOtp(e.target.value)}
+                    className="px-4 py-2 rounded-xl bg-slate-800 text-white border border-slate-700 text-sm font-mono tracking-widest text-center"
                   />
                   <button
-                    onClick={handleValidateCompletionOtp}
-                    className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all shadow"
+                    onClick={handleValidateStartOtp}
+                    className="px-6 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs"
                   >
-                    Submit Completion OTP & Settle Funds
+                    Verify & Begin Work
                   </button>
                 </div>
-
-                {otpError && (
-                  <p className="text-xs font-bold text-rose-600 flex items-center gap-1">
-                    <AlertTriangle className="w-4 h-4" /> {otpError}
-                  </p>
-                )}
+                {otpError && <p className="text-rose-400 text-xs">{otpError}</p>}
               </div>
-            </div>
-          )}
+            )}
 
-          {/* STATE 5: COMPLETED (Settlement & Receipt) */}
-          {currentJob.status === 'COMPLETED' && (
-            <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-300 text-center space-y-4">
-              <div className="w-14 h-14 rounded-full bg-emerald-500 text-white mx-auto flex items-center justify-center shadow-lg">
-                <Check className="w-8 h-8 stroke-[3]" />
+            {currentJob.status === 'IN_PROGRESS' && (
+              <div className="bg-slate-50 border border-slate-200 p-5 rounded-2xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+                    <h4 className="font-bold text-sm text-slate-900">Work in Progress</h4>
+                  </div>
+                  <span className="font-mono text-sm font-bold text-slate-700 bg-white px-3 py-1 rounded-lg border">
+                    ⏱️ Elapsed: {formatTimer(jobTimer)}
+                  </span>
+                </div>
+
+                <div className="p-3 bg-white rounded-xl border border-slate-200 space-y-2">
+                  <span className="text-xs font-bold text-slate-700">Mandatory Safety Protocols Verified:</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-slate-600">
+                    <div className="flex items-center gap-1.5">
+                      <Check className="w-4 h-4 text-emerald-600" /> MCB Main Line Switched Off
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Check className="w-4 h-4 text-emerald-600" /> Insulated Safety Gloves Worn
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Check className="w-4 h-4 text-emerald-600" /> Voltage Tester Used
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div>
+                    <span className="text-xs font-bold text-slate-900">Completion Verification:</span>
+                    <p className="text-[11px] text-slate-500">Ask customer for the 4-digit Completion OTP (Demo Hint: {currentJob.completionOtp})</p>
+                  </div>
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    <input
+                      type="text"
+                      maxLength={4}
+                      placeholder="Completion OTP"
+                      value={inputCompletionOtp}
+                      onChange={(e) => setInputCompletionOtp(e.target.value)}
+                      className="px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono tracking-widest text-center"
+                    />
+                    <button
+                      onClick={handleValidateCompletionOtp}
+                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs whitespace-nowrap"
+                    >
+                      Complete & Collect ₹{currentJob.totalEarnings}
+                    </button>
+                  </div>
+                </div>
+                {otpError && <p className="text-rose-600 text-xs font-semibold">{otpError}</p>}
               </div>
+            )}
 
-              <div>
-                <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider">Job Completed Successfully!</span>
-                <h3 className="text-2xl font-black text-slate-900 mt-1">₹{currentJob.baseWage} Credited to Your Bank Account</h3>
-                <p className="text-xs text-slate-600 mt-1">
-                  100% of fair base wage transferred with zero platform commissions. ₹{currentJob.welfareCess} credited to your cooperative health shield pool.
+            {currentJob.status === 'COMPLETED' && (
+              <div className="bg-emerald-50 border border-emerald-200 p-5 rounded-2xl text-center space-y-3">
+                <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
+                <h4 className="text-lg font-black text-emerald-950">Gig Completed Successfully!</h4>
+                <p className="text-xs text-emerald-800">
+                  ₹{currentJob.baseWage} has been credited to your bank account. ₹{currentJob.welfareCess} has been credited to your cooperative health shield pool.
                 </p>
+                <button
+                  onClick={() => setCurrentJob(null)}
+                  className="px-6 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs"
+                >
+                  Return to Active Dispatch Queue
+                </button>
               </div>
-
-              <div className="p-4 rounded-xl bg-white border border-emerald-200 max-w-sm mx-auto text-xs space-y-2 text-left">
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Base Wage Received:</span>
-                  <span className="font-bold text-slate-900">₹{currentJob.baseWage}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Cooperative Health Reserve Added:</span>
-                  <span className="font-bold text-emerald-700">+₹{currentJob.welfareCess}</span>
-                </div>
-                <div className="flex justify-between border-t border-slate-100 pt-2 font-bold">
-                  <span className="text-slate-700">Total Worker Benefit:</span>
-                  <span className="text-emerald-800">₹{currentJob.totalEarnings}</span>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setCurrentJob(null)}
-                className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow transition-colors"
-              >
-                Close & Ready for Next Job
-              </button>
+            )}
+          </div>
+        ) : (
+          <div className="bg-white border border-slate-200 rounded-3xl p-8 sm:p-12 text-center space-y-4 shadow-sm">
+            <div className="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center mx-auto shadow-sm">
+              <Sparkles className="w-8 h-8" />
             </div>
-          )}
-        </div>
-      ) : (
-        <div className="bg-white border border-slate-200 rounded-3xl p-10 text-center space-y-4 shadow-sm">
-          <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 mx-auto flex items-center justify-center">
-            <CheckCircle2 className="w-8 h-8" />
+            <div className="max-w-md mx-auto space-y-1">
+              <h3 className="text-lg font-black text-slate-900">
+                {isAvailable ? '🟢 Online & Ready for Service Requests' : '🔴 You Are Currently Off Duty'}
+              </h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                {isAvailable
+                  ? `Your GPS beacon is actively broadcasting availability for ${profession} services to the ${coopName} FairMatch™ engine. When a local customer requests a booking, dispatch alerts will appear here.`
+                  : 'Toggle your duty status to "On Duty" above to start receiving local booking requests.'}
+              </p>
+            </div>
+
+            <div className="pt-2 flex flex-wrap justify-center gap-3">
+              <Link
+                href="/worker/earnings"
+                className="px-5 py-2.5 bg-slate-900 text-white font-bold text-xs rounded-xl hover:bg-emerald-600 transition-colors shadow-sm"
+              >
+                View Cooperative Passbook & Earnings
+              </Link>
+              <Link
+                href="/worker/profile"
+                className="px-5 py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-xs rounded-xl hover:bg-emerald-100 transition-colors"
+              >
+                View Public Worker Profile
+              </Link>
+            </div>
           </div>
-          <div>
-            <h3 className="text-lg font-bold text-slate-900">You Are Ready on Duty</h3>
-            <p className="text-xs text-slate-500 max-w-md mx-auto mt-1">
-              Your GPS is broadcasting active availability to the Lucknow Labour Cooperative Society matching engine. Incoming requests will alert here automatically.
-            </p>
-          </div>
-          <button
-            onClick={() => {
-              setCurrentJob({
-                id: `b-${Date.now()}`,
-                orderNumber: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
-                customerName: 'Priya Verma',
-                customerPhone: '+91 98765 22446',
-                serviceTitle: 'Kitchen Exhaust Fan & Regulator Replacement',
-                serviceCategory: 'Electrical & Power',
-                description: 'Exhaust fan stuck and regulator knob sparking intermittently.',
-                urgency: 'EMERGENCY_45_MIN',
-                address: 'C-24, Mahanagar Colony, Lucknow',
-                distance: '2.4 km',
-                baseWage: 450,
-                welfareCess: 32,
-                totalEarnings: 482,
-                status: 'DISPATCHED',
-                startOtp: '5914',
-                completionOtp: '8241',
-              });
-              setCountdown(50);
-            }}
-            className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition-all"
-          >
-            ⚡ Simulate Incoming Cooperative Gig Alert
-          </button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

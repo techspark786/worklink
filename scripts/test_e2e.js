@@ -1,9 +1,17 @@
 const express = require('../backend/node_modules/express');
+const mongoose = require('../backend/node_modules/mongoose');
 
 async function runEndToEndTests() {
   console.log('====================================================');
   console.log('SHRAMSETU END-TO-END SYSTEM INTEGRATION TEST SUITE');
   console.log('====================================================');
+
+  try {
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/shramsetu', { serverSelectionTimeoutMS: 2000 });
+    console.log(' [OK] Connected to MongoDB for Integration Tests');
+  } catch (e) {
+    console.log(' [INFO] MongoDB offline or fallback active');
+  }
 
   const app = express();
   app.use(express.json());
@@ -97,6 +105,9 @@ async function runEndToEndTests() {
       })
     });
     const bookData = await bookRes.json();
+    if (!bookData.booking) {
+      console.error('DEBUG bookRes failure:', bookRes.status, bookData);
+    }
     const booking = bookData.booking;
     const bookingId = booking._id || booking.id;
     console.log(` [OK] Booking Created: Order #${bookingId}`);
@@ -221,6 +232,7 @@ async function runEndToEndTests() {
     console.error('[FAIL] E2E TEST FAILED:', err);
     process.exitCode = 1;
   } finally {
+    try { await mongoose.disconnect(); } catch (e) {}
     server.close(() => {
       process.exit(process.exitCode || 0);
     });

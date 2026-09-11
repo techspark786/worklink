@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import mongoose from 'mongoose';
 import Booking, { IBooking, BookingStatus, BookingUrgency } from '../models/Booking';
 import Worker from '../models/Worker';
 import User from '../models/User';
@@ -122,44 +123,61 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
     const startOtp = generateOtp();
     const completionOtp = generateOtp();
 
-    try {
-      const newBooking = await Booking.create({
-        customerId: customerId || '65e000000000000000000001',
-        workerId: workerId || '65e000000000000000000002',
-        cooperativeId: cooperativeId || null,
-        serviceTitle,
-        serviceCategory: serviceCategory || 'General Service',
-        description,
-        urgency: urgency as BookingUrgency,
-        scheduledDate: scheduledDate || new Date().toISOString().split('T')[0],
-        timeSlot,
-        customerLocation: {
-          address: customerLocation.address,
-          landmark: customerLocation.landmark || '',
-          city: customerLocation.city || 'Lucknow',
-          pincode: customerLocation.pincode || '226001',
-          coordinates: customerLocation.coordinates || { latitude: 26.8467, longitude: 80.9462 },
-        },
-        pricing: {
-          baseWage: wageNum,
-          welfareCess,
-          platformFee,
-          totalAmount,
-          savingsVsAggregator,
-        },
-        status: 'REQUESTED',
-        startOtp,
-        completionOtp,
-        matchScore: Number(matchScore) || 95,
-        customerNotes,
-      });
+    let validCustomerId: any = customerId;
+    let validWorkerId: any = workerId;
 
-      res.status(201).json({
-        message: 'Booking created successfully',
-        booking: newBooking,
-      });
-      return;
-    } catch (dbErr) {
+    if (mongoose.connection.readyState === 1) {
+      try {
+        if (!validCustomerId || !mongoose.Types.ObjectId.isValid(validCustomerId)) {
+          const defaultUser = await User.findOne({ role: 'CUSTOMER' });
+          validCustomerId = defaultUser ? defaultUser._id : new mongoose.Types.ObjectId('65e000000000000000000001');
+        }
+
+        if (!validWorkerId || !mongoose.Types.ObjectId.isValid(validWorkerId)) {
+          const defaultWorker = await Worker.findOne();
+          validWorkerId = defaultWorker ? defaultWorker._id : new mongoose.Types.ObjectId('65e000000000000000000002');
+        }
+
+        const newBooking = await Booking.create({
+          customerId: validCustomerId,
+          workerId: validWorkerId,
+          cooperativeId: cooperativeId && mongoose.Types.ObjectId.isValid(cooperativeId) ? cooperativeId : null,
+          serviceTitle,
+          serviceCategory: serviceCategory || 'General Service',
+          description,
+          urgency: urgency as BookingUrgency,
+          scheduledDate: scheduledDate || new Date().toISOString().split('T')[0],
+          timeSlot,
+          customerLocation: {
+            address: customerLocation.address,
+            landmark: customerLocation.landmark || '',
+            city: customerLocation.city || 'Lucknow',
+            pincode: customerLocation.pincode || '226001',
+            coordinates: customerLocation.coordinates || { latitude: 26.8467, longitude: 80.9462 },
+          },
+          pricing: {
+            baseWage: wageNum,
+            welfareCess,
+            platformFee,
+            totalAmount,
+            savingsVsAggregator,
+          },
+          status: 'REQUESTED',
+          startOtp,
+          completionOtp,
+          matchScore: Number(matchScore) || 95,
+          customerNotes,
+        });
+
+        res.status(201).json({
+          message: 'Booking created successfully',
+          booking: newBooking,
+        });
+        return;
+      } catch (dbErr) {
+        console.warn('MongoDB booking create failed, falling back to memory store:', (dbErr as Error).message);
+      }
+    }
       // Fallback for memory store
       const bookingId = `b-${Date.now()}`;
       const memBooking = {
@@ -205,7 +223,6 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
         message: 'Booking created successfully (offline mode)',
         booking: memBooking,
       });
-    }
   } catch (err) {
     res.status(500).json({ message: 'Error creating booking', error: (err as Error).message });
   }
@@ -218,8 +235,12 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
 
     try {
       let query: any = {};
-      if (customerId) query.customerId = customerId;
-      if (workerId) query.workerId = workerId;
+      if (customerId && mongoose.Types.ObjectId.isValid(customerId as string)) {
+        query.customerId = customerId;
+      }
+      if (workerId && mongoose.Types.ObjectId.isValid(workerId as string)) {
+        query.workerId = workerId;
+      }
       if (status) query.status = status;
 
       const dbBookings = await Booking.find(query)
@@ -228,17 +249,24 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
         .populate('cooperativeId', 'name city state')
         .sort({ createdAt: -1 });
 
-      if (dbBookings && dbBookings.length > 0) {
+      // If user queried with specific customerId or workerId, return dbBookings (even if empty [])
+      if (customerId || workerId || (dbBookings && dbBookings.length > 0)) {
         res.json({ bookings: dbBookings });
         return;
       }
     } catch (dbErr) {
-      // Fallback
+      console.warn('DB error in GET /bookings:', dbErr);
     }
 
     let filtered = [...memoryBookings];
     if (status) {
       filtered = filtered.filter(b => b.status === status);
+    }
+    if (customerId) {
+      filtered = filtered.filter(b => b.customerId === customerId);
+    }
+    if (workerId) {
+      filtered = filtered.filter(b => b.workerId === workerId);
     }
     res.json({ bookings: filtered });
   } catch (err) {

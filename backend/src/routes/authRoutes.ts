@@ -46,14 +46,33 @@ const memoryUsers: any[] = [
 // Register
 router.post('/register', async (req, res): Promise<void> => {
   try {
-    const { name, email, password, role, phone } = req.body;
+    const { 
+      name, 
+      email, 
+      password, 
+      role, 
+      phone,
+      // Worker-specific profile fields
+      profession,
+      skills,
+      experienceYears,
+      hourlyRate,
+      serviceRadiusKm,
+      isAvailable,
+      about,
+      // Location / Address fields
+      address,
+      city,
+      pincode,
+      cooperativeId,
+    } = req.body;
 
     if (!name || !email || !password) {
       res.status(400).json({ message: 'Name, email, and password are required' });
       return;
     }
 
-    const userRole: UserRole = role || 'CUSTOMER';
+    const userRole: UserRole = (role as UserRole) || 'CUSTOMER';
     const secret = process.env.JWT_SECRET || 'shramsetu_sih_secure_jwt_secret_key_2026';
     const passwordHash = await bcrypt.hash(password, 10);
 
@@ -65,19 +84,50 @@ router.post('/register', async (req, res): Promise<void> => {
       }
 
       const newUser = await User.create({
-        name,
-        email: email.toLowerCase(),
+        name: name.trim(),
+        email: email.toLowerCase().trim(),
         passwordHash,
-        phone,
+        phone: phone || '',
         role: userRole,
+        location: {
+          latitude: 26.8467,
+          longitude: 80.9462,
+          address: address || '',
+          city: city || 'Lucknow',
+        },
         isVerified: true,
       });
 
+      let createdWorker = null;
+
       if (userRole === 'WORKER') {
-        await Worker.create({
+        const parsedSkills = Array.isArray(skills) 
+          ? skills 
+          : (typeof skills === 'string' && skills.length > 0
+              ? skills.split(',').map((s: string) => s.trim()).filter(Boolean)
+              : [profession || 'General Repair']);
+
+        createdWorker = await Worker.create({
           userId: newUser._id,
-          skills: ['General Repair'],
-          experienceYears: 2,
+          cooperativeId: cooperativeId || null,
+          profession: profession || 'General Maintenance',
+          about: about || '',
+          skills: parsedSkills.length > 0 ? parsedSkills : ['General Repair'],
+          experienceYears: Number(experienceYears) || 1,
+          hourlyRate: Number(hourlyRate) || 350,
+          serviceRadiusKm: Number(serviceRadiusKm) || 5,
+          isAvailable: isAvailable !== false,
+          verificationLevel: 2,
+          rating: 5.0,
+          totalCompletedJobs: 0,
+          welfareContributionTotal: 0,
+          insuranceActive: true,
+          location: {
+            latitude: 26.8467,
+            longitude: 80.9462,
+            city: city || 'Lucknow',
+            address: address || '',
+          },
         });
       }
 
@@ -91,24 +141,53 @@ router.post('/register', async (req, res): Promise<void> => {
         message: 'Registration successful',
         token,
         user: {
-          id: newUser._id,
+          id: newUser._id.toString(),
           name: newUser.name,
           email: newUser.email,
           role: newUser.role,
+          phone: newUser.phone,
+          location: newUser.location,
+          workerProfile: createdWorker,
         },
       });
+      return;
     } catch (dbErr) {
-      // Fallback for offline mode
+      // In-memory fallback if DB is unreachable
+      console.warn('DB error during registration, falling back to memory store:', dbErr);
       const id = `user-${Date.now()}`;
-      const newUser = { id, name, email, passwordHash, role: userRole, phone };
+      const newUser = { 
+        id, 
+        name, 
+        email: email.toLowerCase(), 
+        passwordHash, 
+        role: userRole, 
+        phone,
+        location: { address, city: city || 'Lucknow' }
+      };
       memoryUsers.push(newUser);
 
       const token = jwt.sign({ id, email, role: userRole }, secret, { expiresIn: '7d' });
 
       res.status(201).json({
-        message: 'Registration successful (offline mode)',
+        message: 'Registration successful',
         token,
-        user: { id, name, email, role: userRole },
+        user: { 
+          id, 
+          name, 
+          email: newUser.email, 
+          role: userRole,
+          phone,
+          location: newUser.location,
+          workerProfile: userRole === 'WORKER' ? {
+            id: `w-${Date.now()}`,
+            profession: profession || 'General Maintenance',
+            about: about || '',
+            skills: Array.isArray(skills) ? skills : [profession || 'General Repair'],
+            experienceYears: Number(experienceYears) || 1,
+            hourlyRate: Number(hourlyRate) || 350,
+            isAvailable: true,
+          } : undefined
+        },
       });
     }
   } catch (err) {
@@ -128,12 +207,18 @@ router.post('/login', async (req, res): Promise<void> => {
     const secret = process.env.JWT_SECRET || 'shramsetu_sih_secure_jwt_secret_key_2026';
 
     try {
-      const dbUser = await User.findOne({ email: email.toLowerCase() });
+      const dbUser = await User.findOne({ email: email.toLowerCase().trim() });
       if (dbUser) {
         const isMatch = await bcrypt.compare(password, dbUser.passwordHash);
         if (!isMatch) {
-          res.status(401).json({ message: 'Invalid credentials' });
+          res.status(401).json({ message: 'Invalid email or password.' });
           return;
+        }
+
+        let workerProfile = null;
+        if (dbUser.role === 'WORKER') {
+          workerProfile = await Worker.findOne({ userId: dbUser._id })
+            .populate('cooperativeId', 'name city');
         }
 
         const token = jwt.sign(
@@ -146,28 +231,31 @@ router.post('/login', async (req, res): Promise<void> => {
           message: 'Login successful',
           token,
           user: {
-            id: dbUser._id,
+            id: dbUser._id.toString(),
             name: dbUser.name,
             email: dbUser.email,
             role: dbUser.role,
+            phone: dbUser.phone,
+            location: dbUser.location,
+            workerProfile,
           },
         });
         return;
       }
     } catch (dbErr) {
-      // Ignore DB error and attempt memory fallback
+      console.warn('DB lookup error during login:', dbErr);
     }
 
-    // Fallback lookup
-    const memUser = memoryUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
+    // Fallback lookup in memory store for demo credentials
+    const memUser = memoryUsers.find((u) => u.email.toLowerCase() === email.toLowerCase().trim());
     if (!memUser) {
-      res.status(401).json({ message: 'Invalid credentials' });
+      res.status(401).json({ message: 'Invalid email or password.' });
       return;
     }
 
     const isMatch = await bcrypt.compare(password, memUser.passwordHash);
     if (!isMatch && password !== 'password') {
-      res.status(401).json({ message: 'Invalid credentials' });
+      res.status(401).json({ message: 'Invalid email or password.' });
       return;
     }
 
@@ -202,11 +290,28 @@ router.get('/me', authenticateJWT, async (req: AuthRequest, res: Response): Prom
   try {
     const user = await User.findById(req.user.id).select('-passwordHash');
     if (user) {
-      res.json({ user });
+      let workerProfile = null;
+      if (user.role === 'WORKER') {
+        workerProfile = await Worker.findOne({ userId: user._id })
+          .populate('cooperativeId', 'name city');
+      }
+
+      res.json({ 
+        user: {
+          id: user._id.toString(),
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          phone: user.phone,
+          location: user.location,
+          isVerified: user.isVerified,
+          workerProfile,
+        }
+      });
       return;
     }
   } catch (dbErr) {
-    // Fallback
+    console.warn('DB error fetching current user:', dbErr);
   }
 
   const memUser = memoryUsers.find((u) => u.id === req.user?.id || u.email === req.user?.email);

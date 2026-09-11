@@ -53,95 +53,38 @@ interface BookingItem {
   createdAt: string;
 }
 
-export default function CustomerBookingsPage() {
-  const [bookings, setBookings] = useState<BookingItem[]>([
-    {
-      _id: 'b-demo-1',
-      id: 'b-demo-1',
-      customerId: 'cust-1',
-      workerId: 'w1',
-      workerName: 'Ramesh Kumar',
-      workerPhone: '+91 91234 56789',
-      cooperativeName: 'Lucknow Labour Cooperative Society Ltd.',
-      serviceTitle: 'Ceiling Fan & Switchboard Repair',
-      serviceCategory: 'Electrical & Power',
-      description: 'Ceiling fan makes loud grinding noise and regulator knob is stuck.',
-      urgency: 'SAME_DAY',
-      scheduledDate: new Date().toISOString().split('T')[0],
-      timeSlot: '02:00 PM - 04:00 PM',
-      customerLocation: {
-        address: 'Flat 402, Hazratganj Heights, Lucknow',
-        city: 'Lucknow',
-        pincode: '226001',
-      },
-      pricing: {
-        baseWage: 400,
-        welfareCess: 28,
-        platformFee: 20,
-        totalAmount: 448,
-        savingsVsAggregator: 182,
-      },
-      status: 'IN_PROGRESS',
-      startOtp: '4829',
-      completionOtp: '7103',
-      matchScore: 96,
-      createdAt: new Date(Date.now() - 3600000).toISOString(),
-    },
-    {
-      _id: 'b-demo-2',
-      id: 'b-demo-2',
-      customerId: 'cust-1',
-      workerId: 'w2',
-      workerName: 'Suresh Chandra',
-      workerPhone: '+91 98765 11223',
-      cooperativeName: 'Lucknow Labour Cooperative Society Ltd.',
-      serviceTitle: 'Main Pipeline Joint Leakage Fix',
-      serviceCategory: 'Plumbing & Drainage',
-      description: 'Bathroom washbasin outlet valve continuously dripping.',
-      urgency: 'EMERGENCY_45_MIN',
-      scheduledDate: new Date().toISOString().split('T')[0],
-      timeSlot: 'Immediate (45 Min Express)',
-      customerLocation: {
-        address: 'B-12, Aliganj Sector J, Lucknow',
-        city: 'Lucknow',
-        pincode: '226024',
-      },
-      pricing: {
-        baseWage: 450,
-        welfareCess: 32,
-        platformFee: 22,
-        totalAmount: 504,
-        savingsVsAggregator: 215,
-      },
-      status: 'REQUESTED',
-      startOtp: '6291',
-      completionOtp: '8415',
-      matchScore: 92,
-      createdAt: new Date().toISOString(),
-    },
-  ]);
+import { useAuth } from '@/context/AuthContext';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+
+export default function CustomerBookingsPage() {
+  const { user } = useAuth();
+  const [bookings, setBookings] = useState<BookingItem[]>([]);
   const [selectedReceipt, setSelectedReceipt] = useState<BookingItem | null>(null);
   const [disputeOpen, setDisputeOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
+  const [loading, setLoading] = useState(true);
 
-  // Fetch bookings from backend if available
+  // Fetch bookings from backend strictly for currently authenticated customer
   useEffect(() => {
     async function fetchBookings() {
       try {
-        const res = await fetch('http://localhost:5000/api/bookings');
+        const customerParam = user?.id ? `?customerId=${user.id}` : '';
+        const res = await fetch(`${API_BASE_URL}/bookings${customerParam}`);
         if (res.ok) {
           const data = await res.json();
-          if (data.bookings && data.bookings.length > 0) {
+          if (Array.isArray(data.bookings)) {
             setBookings(data.bookings);
           }
         }
       } catch (e) {
-        // Use initial mock data
+        console.warn('Error fetching customer bookings:', e);
+      } finally {
+        setLoading(false);
       }
     }
     fetchBookings();
-  }, []);
+  }, [user]);
 
   // Update status locally and on backend
   const updateStatus = async (bookingId: string, newStatus: BookingItem['status']) => {

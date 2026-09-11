@@ -19,11 +19,16 @@ import {
   Layers,
   Award,
   ChevronRight,
+  ChevronLeft,
   TrendingUp,
   X,
   PhoneCall,
-  Check
+  Check,
+  Wrench,
+  Bot,
+  RefreshCw
 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 interface WorkerCandidate {
   id: string;
@@ -63,10 +68,24 @@ export default function CustomerDashboard() {
   const [selectedUrgency, setSelectedUrgency] = useState<'SAME_DAY' | 'EMERGENCY_45_MIN' | 'SCHEDULED'>('SAME_DAY');
   const [customerAddress, setCustomerAddress] = useState('Flat 402, Hazratganj Heights, Hazratganj, Lucknow');
   
+  // Auth Context & User
+  const { user } = useAuth();
+
   // Modals state
   const [inspectWorker, setInspectWorker] = useState<WorkerCandidate | null>(null);
   const [bookingWorker, setBookingWorker] = useState<WorkerCandidate | null>(null);
   const [bookingSuccessData, setBookingSuccessData] = useState<any | null>(null);
+
+  // Smart Booking Flow Multi-Step State
+  const [bookingStep, setBookingStep] = useState<1 | 2 | 3>(1);
+  const [bookingService, setBookingService] = useState('Electrician');
+  const [bookingProblem, setBookingProblem] = useState('');
+  const [bookingScheduledDate, setBookingScheduledDate] = useState(new Date().toISOString().split('T')[0]);
+  const [bookingTimeSlot, setBookingTimeSlot] = useState('02:00 PM - 04:00 PM');
+  const [bookingCustomerNotes, setBookingCustomerNotes] = useState('');
+  const [bookingSubmitting, setBookingSubmitting] = useState(false);
+  const [aiDiagnosing, setAiDiagnosing] = useState(false);
+  const [aiRecommendation, setAiRecommendation] = useState<any | null>(null);
 
   // AI Classification state
   const [aiAnalysis, setAiAnalysis] = useState<{
@@ -267,31 +286,127 @@ export default function CustomerDashboard() {
     runAiAnalysis(photoText);
   };
 
-  const handleExecuteBooking = async (worker: WorkerCandidate) => {
-    const baseWage = worker.hourlyRate;
+  // Prefill address from authenticated user
+  useEffect(() => {
+    if (user?.location?.address) {
+      setCustomerAddress(`${user.location.address}, ${user.location.city || 'Lucknow'}`);
+    }
+  }, [user]);
+
+  // Load real workers from MongoDB to show newly registered workers
+  useEffect(() => {
+    async function loadWorkers() {
+      try {
+        const res = await fetch('http://localhost:5000/api/workers');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.workers && data.workers.length > 0) {
+            const mapped: WorkerCandidate[] = data.workers.map((w: any) => ({
+              id: w._id || w.id,
+              _id: w._id || w.id,
+              name: w.userId?.name || w.name || 'Cooperative Worker',
+              skills: w.skills || [w.profession || 'General Repair'],
+              experienceYears: w.experienceYears || 1,
+              verificationLevel: w.verificationLevel || 2,
+              isAvailable: w.isAvailable !== false,
+              serviceRadiusKm: w.serviceRadiusKm || 8,
+              hourlyRate: w.hourlyRate || 350,
+              rating: w.rating || 4.9,
+              totalCompletedJobs: w.totalCompletedJobs || 0,
+              welfareContributionTotal: w.welfareContributionTotal || 0,
+              insuranceActive: w.insuranceActive !== false,
+              cooperativeName: w.cooperativeId?.name || w.cooperativeName || 'Lucknow Labour Cooperative Society Ltd.',
+              distanceKm: 2.4,
+              distanceText: '2.4 km',
+              matchScore: 94,
+              matchBreakdown: {
+                skillScore: 28,
+                distanceScore: 22,
+                availabilityScore: 20,
+                trustScore: 14,
+                experienceScore: 8,
+                totalScore: 94,
+              },
+            }));
+            setWorkers(mapped);
+          }
+        }
+      } catch (err) {
+        console.warn('Error loading workers from API:', err);
+      }
+    }
+    loadWorkers();
+  }, []);
+
+  const openSmartBooking = (worker: WorkerCandidate) => {
+    setBookingWorker(worker);
+    setBookingStep(1);
+    const initialTrade = worker.skills[0] || 'General Maintenance';
+    setBookingService(initialTrade);
+    setBookingProblem(problemQuery || '');
+    setBookingScheduledDate(new Date().toISOString().split('T')[0]);
+    setBookingTimeSlot(selectedUrgency === 'EMERGENCY_45_MIN' ? 'Immediate (45 Min Express)' : '02:00 PM - 04:00 PM');
+    setBookingCustomerNotes('');
+    setAiRecommendation(null);
+  };
+
+  const handleAiDiagnoseInModal = async () => {
+    if (!bookingProblem.trim()) return;
+    setAiDiagnosing(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/ai/diagnose', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ queryText: bookingProblem }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.diagnosis) {
+          setAiRecommendation(data.diagnosis);
+          if (data.diagnosis.detectedTrade) {
+            setBookingService(data.diagnosis.detectedTrade);
+          }
+          if (data.diagnosis.recommendedUrgency) {
+            setSelectedUrgency(data.diagnosis.recommendedUrgency as any);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('AI modal diagnose failed:', err);
+    } finally {
+      setAiDiagnosing(false);
+    }
+  };
+
+  const handleExecuteBooking = async () => {
+    if (!bookingWorker) return;
+    setBookingSubmitting(true);
+
+    const baseWage = bookingWorker.hourlyRate;
     const welfareCess = Math.round(baseWage * 0.07);
     const platformFee = Math.round(baseWage * 0.05);
     const totalAmount = baseWage + welfareCess + platformFee;
     const savingsVsAggregator = Math.round(baseWage * 0.45);
 
     const bookingPayload = {
-      customerId: 'cust-1',
-      workerId: worker.id,
-      workerName: worker.name,
-      cooperativeName: worker.cooperativeName,
-      serviceTitle: aiAnalysis?.trade || 'Local Cooperative Home Service',
-      serviceCategory: worker.skills[0] || 'Household Maintenance',
-      description: problemQuery || 'Urgent home repair requested through ShramSetu AI discovery portal.',
+      customerId: user?.id || user?._id || '65e000000000000000000001',
+      workerId: bookingWorker._id || bookingWorker.id,
+      workerName: bookingWorker.name,
+      cooperativeName: bookingWorker.cooperativeName,
+      serviceTitle: bookingService || 'Cooperative Service',
+      serviceCategory: bookingWorker.skills[0] || 'Household Maintenance',
+      description: bookingProblem || problemQuery || 'Urgent home repair requested through ShramSetu.',
       urgency: selectedUrgency,
-      scheduledDate: new Date().toISOString().split('T')[0],
-      timeSlot: selectedUrgency === 'EMERGENCY_45_MIN' ? 'Immediate (45 Min Express)' : '02:00 PM - 04:00 PM',
+      scheduledDate: bookingScheduledDate || new Date().toISOString().split('T')[0],
+      timeSlot: selectedUrgency === 'EMERGENCY_45_MIN' ? 'Immediate (45 Min Express)' : bookingTimeSlot,
       customerLocation: {
-        address: customerAddress,
-        city: 'Lucknow',
+        address: customerAddress || user?.location?.address || 'Doorstep Address, Lucknow',
+        city: user?.location?.city || 'Lucknow',
         pincode: '226001',
       },
       baseWage,
-      matchScore: worker.matchScore,
+      matchScore: bookingWorker.matchScore || 95,
+      customerNotes: bookingCustomerNotes || '',
     };
 
     try {
@@ -301,6 +416,7 @@ export default function CustomerDashboard() {
         body: JSON.stringify(bookingPayload),
       });
       const data = await res.json();
+      setBookingWorker(null);
       setBookingSuccessData(data.booking || {
         ...bookingPayload,
         startOtp: '4829',
@@ -309,6 +425,7 @@ export default function CustomerDashboard() {
       });
     } catch (e) {
       // Offline fallback
+      setBookingWorker(null);
       setBookingSuccessData({
         _id: `b-${Date.now()}`,
         ...bookingPayload,
@@ -316,6 +433,8 @@ export default function CustomerDashboard() {
         completionOtp: '7103',
         pricing: { baseWage, welfareCess, platformFee, totalAmount, savingsVsAggregator }
       });
+    } finally {
+      setBookingSubmitting(false);
     }
   };
 
@@ -324,10 +443,15 @@ export default function CustomerDashboard() {
       {/* Top Banner: Customer Context & Location */}
       <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider">
               Cooperative Consumer Portal
             </span>
+            {user && (
+              <span className="px-2.5 py-0.5 rounded-full bg-slate-900 text-emerald-400 text-xs font-bold">
+                👤 Logged In: {user.name}
+              </span>
+            )}
             <span className="flex items-center gap-1 text-xs text-slate-500 font-medium">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
               Live Geolocation Matching Active
@@ -719,7 +843,7 @@ export default function CustomerDashboard() {
 
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setBookingWorker(worker)}
+                    onClick={() => openSmartBooking(worker)}
                     className="px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all shadow hover:shadow-md flex items-center gap-1.5"
                   >
                     Book Cooperative Worker
@@ -836,7 +960,7 @@ export default function CustomerDashboard() {
               onClick={() => {
                 const w = inspectWorker;
                 setInspectWorker(null);
-                setBookingWorker(w);
+                if (w) openSmartBooking(w);
               }}
               className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-2xl transition-all shadow"
             >
@@ -846,14 +970,21 @@ export default function CustomerDashboard() {
         </div>
       )}
 
-      {/* BOOKING INITIATION MODAL */}
+      {/* SMART MULTI-STEP BOOKING FLOW MODAL */}
       {bookingWorker && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-200">
-            <div className="flex items-center justify-between">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div>
-                <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">Direct Cooperative Booking</span>
-                <h3 className="text-xl font-black text-slate-900">Confirm Service Request</h3>
+                <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">
+                  Smart Cooperative Booking
+                </span>
+                <h3 className="text-xl font-black text-slate-900">
+                  {bookingStep === 1 && "Step 1: What problem are you facing?"}
+                  {bookingStep === 2 && "Step 2: Schedule & Doorstep Location"}
+                  {bookingStep === 3 && "Step 3: Review & Transparent Pricing"}
+                </h3>
               </div>
               <button
                 onClick={() => setBookingWorker(null)}
@@ -863,104 +994,348 @@ export default function CustomerDashboard() {
               </button>
             </div>
 
-            {/* Worker summary */}
-            <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
-              <div className="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-lg">
+            {/* Stepper Progress Indicator */}
+            <div className="flex items-center justify-between gap-2 px-1">
+              <div className={`flex-1 h-2 rounded-full transition-colors ${bookingStep >= 1 ? 'bg-emerald-600' : 'bg-slate-200'}`} />
+              <div className={`flex-1 h-2 rounded-full transition-colors ${bookingStep >= 2 ? 'bg-emerald-600' : 'bg-slate-200'}`} />
+              <div className={`flex-1 h-2 rounded-full transition-colors ${bookingStep >= 3 ? 'bg-emerald-600' : 'bg-slate-200'}`} />
+            </div>
+
+            {/* Worker summary chip */}
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200">
+              <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-base flex-shrink-0">
                 {bookingWorker.name[0]}
               </div>
-              <div>
-                <h4 className="font-bold text-slate-900">{bookingWorker.name}</h4>
-                <p className="text-xs text-slate-500">{bookingWorker.cooperativeName}</p>
-                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">
-                  Cooperative Verified Member (Level {bookingWorker.verificationLevel})
-                </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <h4 className="font-bold text-slate-900 text-sm truncate">{bookingWorker.name}</h4>
+                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded whitespace-nowrap">
+                    Level {bookingWorker.verificationLevel} Verified
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 truncate">{bookingWorker.cooperativeName}</p>
+              </div>
+              <div className="text-right">
+                <span className="text-xs font-black text-slate-900">₹{bookingWorker.hourlyRate}/hr</span>
+                <span className="block text-[10px] text-emerald-600 font-bold">100% to Member</span>
               </div>
             </div>
 
-            {/* Service & Location fields */}
-            <div className="space-y-3 text-xs">
-              <div>
-                <label className="font-bold text-slate-700 block mb-1">Service Required</label>
-                <input
-                  type="text"
-                  value={aiAnalysis?.trade || 'Electrician / Appliance Repair'}
-                  readOnly
-                  className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-slate-800 font-semibold"
-                />
-              </div>
-
-              <div>
-                <label className="font-bold text-slate-700 block mb-1">Service Address</label>
-                <input
-                  type="text"
-                  value={customerAddress}
-                  onChange={(e) => setCustomerAddress(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-800 font-medium focus:ring-2 focus:ring-emerald-500 outline-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
+            {/* STEP 1: Describe Problem & Service */}
+            {bookingStep === 1 && (
+              <div className="space-y-4 text-xs">
                 <div>
-                  <label className="font-bold text-slate-700 block mb-1">Urgency</label>
-                  <select
-                    value={selectedUrgency}
-                    onChange={(e: any) => setSelectedUrgency(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-800 font-semibold"
-                  >
-                    <option value="SAME_DAY">Same Day Dispatch</option>
-                    <option value="EMERGENCY_45_MIN">⚡ 45-Min Emergency</option>
-                    <option value="SCHEDULED">Scheduled Tomorrow</option>
-                  </select>
+                  <label className="font-bold text-slate-700 block mb-1">
+                    What problem are you facing? Describe your requirement:
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="e.g. My bathroom tap has been leaking for two days and the drain pipe is choked..."
+                    value={bookingProblem}
+                    onChange={(e) => setBookingProblem(e.target.value)}
+                    className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-800 text-xs focus:ring-2 focus:ring-emerald-500 outline-none"
+                  />
                 </div>
+
+                {/* Quick problem tags */}
                 <div>
-                  <label className="font-bold text-slate-700 block mb-1">Time Window</label>
-                  <div className="px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-slate-700 font-semibold">
-                    {selectedUrgency === 'EMERGENCY_45_MIN' ? 'Immediate (<45 min)' : '02:00 PM - 04:00 PM'}
+                  <span className="text-[11px] text-slate-400 font-bold block mb-1.5">Common Quick Prompts:</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      "Water leakage in washbasin tap",
+                      "Ceiling fan making grinding noise",
+                      "Main switchboard sparking & buzzing",
+                      "AC blowing room temperature air",
+                      "Door lock jammed & hinge loose",
+                      "Deep kitchen & bathroom cleaning",
+                    ].map((tag, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setBookingProblem(tag)}
+                        className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 border border-slate-200 text-[11px] font-medium transition-colors"
+                      >
+                        {tag}
+                      </button>
+                    ))}
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Transparent Bill Breakdown */}
-            <div className="p-4 rounded-2xl bg-slate-900 text-white space-y-2.5 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>Worker Base Wage (100% directly to worker):</span>
-                <span className="font-bold text-white">₹{bookingWorker.hourlyRate}</span>
-              </div>
-              <div className="flex justify-between text-slate-300">
-                <span>Cooperative Welfare Cess (7% pension/health):</span>
-                <span className="font-bold text-white">₹{Math.round(bookingWorker.hourlyRate * 0.07)}</span>
-              </div>
-              <div className="flex justify-between text-slate-300">
-                <span>Digital Platform & GST (5% ops):</span>
-                <span className="font-bold text-white">₹{Math.round(bookingWorker.hourlyRate * 0.05)}</span>
-              </div>
-              <div className="border-t border-slate-800 pt-2 flex justify-between font-bold text-sm">
-                <span className="text-emerald-400">Total Transparent Amount:</span>
-                <span className="text-emerald-400">
-                  ₹{bookingWorker.hourlyRate + Math.round(bookingWorker.hourlyRate * 0.07) + Math.round(bookingWorker.hourlyRate * 0.05)}
-                </span>
-              </div>
+                {/* AI Assistant Symptom Diagnosis Helper */}
+                <div className="p-3 bg-emerald-50/70 rounded-2xl border border-emerald-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-emerald-900 flex items-center gap-1.5 text-xs">
+                      <Sparkles className="w-4 h-4 text-emerald-600" /> AI Symptom Diagnosis
+                    </span>
+                    <button
+                      type="button"
+                      disabled={aiDiagnosing || !bookingProblem.trim()}
+                      onClick={handleAiDiagnoseInModal}
+                      className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-lg font-bold text-[10px] transition-colors flex items-center gap-1 shadow-sm"
+                    >
+                      {aiDiagnosing ? (
+                        <>
+                          <RefreshCw className="w-3 h-3 animate-spin" /> Diagnosing...
+                        </>
+                      ) : (
+                        <span>Analyze with AI</span>
+                      )}
+                    </button>
+                  </div>
 
-              {/* Private Aggregator comparison banner */}
-              <div className="mt-2 p-2.5 rounded-xl bg-emerald-950/80 border border-emerald-500/30 text-[11px] text-emerald-200 flex items-center gap-2">
-                <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>
-                  <strong>Cooperative Advantage:</strong> You save ₹{Math.round(bookingWorker.hourlyRate * 0.45)} vs private corporate gig apps, while worker earns ₹120 more!
-                </span>
-              </div>
-            </div>
+                  {aiRecommendation && (
+                    <div className="space-y-1.5 pt-1 border-t border-emerald-200/60 text-[11px]">
+                      <div className="flex items-center justify-between text-emerald-950 font-bold">
+                        <span>💡 Recommended Trade: {aiRecommendation.detectedTrade}</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-800">
+                          {aiRecommendation.recommendedUrgency}
+                        </span>
+                      </div>
+                      {aiRecommendation.safetyAdvisory && (
+                        <p className="text-amber-800 bg-amber-50 p-2 rounded-lg border border-amber-200 text-[10px]">
+                          ⚠️ {aiRecommendation.safetyAdvisory}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
 
-            <button
-              onClick={() => {
-                const w = bookingWorker;
-                setBookingWorker(null);
-                handleExecuteBooking(w);
-              }}
-              className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm rounded-2xl transition-all shadow-lg flex items-center justify-center gap-2"
-            >
-              <CheckCircle2 className="w-5 h-5" /> Confirm & Issue Booking OTPs
-            </button>
+                {/* Confirm or Select Service Trade */}
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">
+                    Confirmed Service Category:
+                  </label>
+                  <select
+                    value={bookingService}
+                    onChange={(e) => setBookingService(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-800 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none"
+                  >
+                    {[
+                      'Plumber',
+                      'Electrician',
+                      'Carpenter',
+                      'AC Technician',
+                      'Cleaner & Sanitation',
+                      'Painter',
+                      'Domestic Helper',
+                      'Appliance Repair',
+                      'General Maintenance',
+                    ].map((serv) => (
+                      <option key={serv} value={serv}>
+                        {serv}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!bookingProblem.trim()) {
+                      setBookingProblem('Standard home maintenance service requested.');
+                    }
+                    setBookingStep(2);
+                  }}
+                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <span>Continue to Schedule & Location</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
+            {/* STEP 2: Schedule & Address */}
+            {bookingStep === 2 && (
+              <div className="space-y-4 text-xs">
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Doorstep Service Address</label>
+                  <input
+                    type="text"
+                    required
+                    value={customerAddress}
+                    onChange={(e) => setCustomerAddress(e.target.value)}
+                    placeholder="Enter your street address, apartment, and landmark"
+                    className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Preferred Date</label>
+                    <input
+                      type="date"
+                      value={bookingScheduledDate}
+                      onChange={(e) => setBookingScheduledDate(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-800 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Preferred Time Window</label>
+                    <select
+                      value={bookingTimeSlot}
+                      onChange={(e) => setBookingTimeSlot(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-800 font-semibold focus:ring-2 focus:ring-emerald-500 outline-none"
+                    >
+                      <option value="09:00 AM - 11:00 AM">Morning: 09:00 AM - 11:00 AM</option>
+                      <option value="11:00 AM - 01:00 PM">Midday: 11:00 AM - 01:00 PM</option>
+                      <option value="02:00 PM - 04:00 PM">Afternoon: 02:00 PM - 04:00 PM</option>
+                      <option value="05:00 PM - 07:00 PM">Evening: 05:00 PM - 07:00 PM</option>
+                      <option value="Immediate (45 Min Express)">Immediate (45 Min Express)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Service Urgency</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: 'SAME_DAY', label: 'Same Day' },
+                      { id: 'EMERGENCY_45_MIN', label: '⚡ 45-Min Express' },
+                      { id: 'SCHEDULED', label: 'Scheduled' },
+                    ].map((urg) => (
+                      <button
+                        key={urg.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedUrgency(urg.id as any);
+                          if (urg.id === 'EMERGENCY_45_MIN') {
+                            setBookingTimeSlot('Immediate (45 Min Express)');
+                          }
+                        }}
+                        className={`py-2 px-2 rounded-xl text-center font-bold border transition-colors ${
+                          selectedUrgency === urg.id
+                            ? 'bg-emerald-600 text-white border-emerald-600'
+                            : 'bg-white text-slate-700 border-slate-200 hover:border-emerald-300'
+                        }`}
+                      >
+                        {urg.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">
+                    Special Instructions / Landmark (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Near gate 2, ring bell twice, pet dog at home"
+                    value={bookingCustomerNotes}
+                    onChange={(e) => setBookingCustomerNotes(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-800 text-xs focus:ring-2 focus:ring-emerald-500 outline-none"
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setBookingStep(1)}
+                    className="w-1/3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors"
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBookingStep(3)}
+                    className="w-2/3 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all shadow flex items-center justify-center gap-1 cursor-pointer"
+                  >
+                    <span>Review & Pricing</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 3: Review & Transparent Pricing Breakdown */}
+            {bookingStep === 3 && (
+              <div className="space-y-4 text-xs">
+                {/* Summary Box */}
+                <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                    Request Summary
+                  </span>
+                  <div className="grid grid-cols-2 gap-2 text-slate-800">
+                    <div>
+                      <span className="text-slate-400 text-[10px] block">Service:</span>
+                      <strong className="text-slate-900">{bookingService}</strong>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 text-[10px] block">Urgency:</span>
+                      <strong className="text-emerald-700">{selectedUrgency}</strong>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-slate-400 text-[10px] block">Problem Description:</span>
+                      <p className="text-slate-700 italic">"{bookingProblem}"</p>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-slate-400 text-[10px] block">Doorstep Address:</span>
+                      <span>{customerAddress} ({bookingScheduledDate}, {bookingTimeSlot})</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Transparent Bill Breakdown */}
+                <div className="p-4 rounded-2xl bg-slate-900 text-white space-y-2.5 text-xs">
+                  <div className="flex justify-between text-slate-300">
+                    <span>Worker Base Wage (100% directly to member):</span>
+                    <span className="font-bold text-white">₹{bookingWorker.hourlyRate}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-300">
+                    <span>Cooperative Welfare Cess (7% health/pension):</span>
+                    <span className="font-bold text-white">₹{Math.round(bookingWorker.hourlyRate * 0.07)}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-300">
+                    <span>Digital Platform & Tech Ops (5%):</span>
+                    <span className="font-bold text-white">₹{Math.round(bookingWorker.hourlyRate * 0.05)}</span>
+                  </div>
+                  <div className="border-t border-slate-800 pt-2 flex justify-between font-bold text-sm">
+                    <span className="text-emerald-400">Total Transparent Amount:</span>
+                    <span className="text-emerald-400">
+                      ₹{bookingWorker.hourlyRate + Math.round(bookingWorker.hourlyRate * 0.07) + Math.round(bookingWorker.hourlyRate * 0.05)}
+                    </span>
+                  </div>
+
+                  {/* Private Aggregator comparison banner */}
+                  <div className="mt-2 p-2.5 rounded-xl bg-emerald-950/80 border border-emerald-500/30 text-[11px] text-emerald-200 flex items-center gap-2">
+                    <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>
+                      <strong>Cooperative Advantage:</strong> You save ₹{Math.round(bookingWorker.hourlyRate * 0.45)} vs corporate gig apps, while worker earns 100% of fair base wage!
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setBookingStep(2)}
+                    disabled={bookingSubmitting}
+                    className="w-1/3 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors"
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    disabled={bookingSubmitting}
+                    onClick={handleExecuteBooking}
+                    className="w-2/3 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-black text-sm rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    {bookingSubmitting ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <span>Creating Booking...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>Confirm & Book Worker</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
