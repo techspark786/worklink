@@ -17,7 +17,9 @@ import {
   Building2, 
   Award,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  Sparkles,
+  ArrowRight
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
@@ -171,363 +173,414 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto my-10 px-4">
-      <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-xl space-y-6">
-        <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500 text-slate-950 flex items-center justify-center mx-auto shadow">
-            <ShieldCheck className="w-7 h-7" />
+    <div className="relative min-h-[calc(100vh-140px)] flex items-center justify-center px-4 py-16 overflow-hidden">
+      {/* Ambient Lighting Orbs */}
+      <div className="absolute -top-32 left-1/4 w-96 h-96 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-10 right-1/4 w-80 h-80 bg-champagne-500/10 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="w-full max-w-2xl relative z-10">
+        {/* Top Badging */}
+        <div className="text-center mb-6 space-y-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-champagne-500/10 border border-champagne-400/25 text-champagne-300 text-[11px] font-semibold tracking-wider uppercase">
+            <Sparkles className="w-3.5 h-3.5 text-champagne-400 animate-pulse" />
+            <span>Code Craft 3.0 • Multi-Role Onboarding</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900">Create ShramSetu Account</h1>
-          <p className="text-xs sm:text-sm text-slate-500">Join the cooperative-powered local service ecosystem</p>
         </div>
 
-        {/* Role Selection Tabs */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-1.5 bg-slate-100 rounded-2xl text-xs font-semibold">
-          <button
-            type="button"
-            onClick={() => setRole('CUSTOMER')}
-            className={`py-2.5 rounded-xl transition-all ${role === 'CUSTOMER' ? 'bg-white text-emerald-700 shadow font-bold' : 'text-slate-600 hover:text-slate-900'}`}
-          >
-            👤 Customer
-          </button>
-          <button
-            type="button"
-            onClick={() => setRole('WORKER')}
-            className={`py-2.5 rounded-xl transition-all ${role === 'WORKER' ? 'bg-white text-emerald-700 shadow font-bold' : 'text-slate-600 hover:text-slate-900'}`}
-          >
-            🛠️ Worker
-          </button>
-          <button
-            type="button"
-            onClick={() => setRole('COOPERATIVE_ADMIN')}
-            className={`py-2.5 rounded-xl transition-all ${role === 'COOPERATIVE_ADMIN' ? 'bg-white text-emerald-700 shadow font-bold' : 'text-slate-600 hover:text-slate-900'}`}
-          >
-            🏢 Coop Admin
-          </button>
-          <button
-            type="button"
-            onClick={() => setRole('FEDERATION_ADMIN')}
-            className={`py-2.5 rounded-xl transition-all ${role === 'FEDERATION_ADMIN' ? 'bg-white text-emerald-700 shadow font-bold' : 'text-slate-600 hover:text-slate-900'}`}
-          >
-            🏛️ Federation
-          </button>
-        </div>
+        {/* Luxury Glass Card */}
+        <div className="relative rounded-3xl p-6 sm:p-10 bg-navy-900/80 backdrop-blur-2xl border border-champagne-500/20 shadow-2xl shadow-navy-950/90 space-y-6">
+          <div className="absolute inset-x-12 top-0 h-[1px] bg-gradient-to-r from-transparent via-champagne-400/40 to-transparent" />
 
-        {errorMsg && (
-          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-600" />
-            <span>{errorMsg}</span>
-          </div>
-        )}
-
-        <form onSubmit={handleRegister} className="space-y-5">
-          {/* Section 1: Account Credentials */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-              1. Basic Credentials
-            </h3>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Full Name</label>
-                <div className="relative">
-                  <User className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Ramesh Kumar"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Mobile Phone</label>
-                <div className="relative">
-                  <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                  <input
-                    type="tel"
-                    required
-                    placeholder="+91 98765 43210"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
-                  />
-                </div>
-              </div>
+          {/* Header */}
+          <div className="text-center space-y-2">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-champagne-400 to-rose-500 text-navy-950 flex items-center justify-center mx-auto shadow-glow-champagne">
+              <ShieldCheck className="w-8 h-8 stroke-[2.2]" />
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Email Address</label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                  <input
-                    type="email"
-                    required
-                    placeholder="name@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Password</label>
-                <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                  <input
-                    type="password"
-                    required
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
-                  />
-                </div>
-              </div>
-            </div>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight font-display gradient-text-hero">
+              Create WorkLink Account
+            </h1>
+            <p className="text-xs sm:text-sm text-cream-200/60 font-sans">
+              Join the cooperative-powered, 0% commission service network
+            </p>
           </div>
 
-          {/* Section 2: Location Details */}
-          <div className="space-y-3 pt-2 border-t border-slate-100">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-              2. Location & Address
-            </h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="sm:col-span-2">
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Doorstep / Street Address</label>
-                <div className="relative">
-                  <MapPin className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Flat 302, Green Park Avenue"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">City</label>
-                <input
-                  type="text"
-                  required
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
-                />
-              </div>
-            </div>
+          {/* Role Selection Tabs */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-1.5 bg-navy-950/70 border border-navy-700/60 rounded-2xl text-xs font-semibold">
+            <button
+              type="button"
+              onClick={() => setRole('CUSTOMER')}
+              className={`py-2.5 px-2 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+                role === 'CUSTOMER'
+                  ? 'bg-gradient-to-r from-rose-500 to-champagne-400 text-navy-950 font-bold shadow-glow-rose'
+                  : 'text-cream-200/70 hover:text-cream-100 hover:bg-navy-800/40'
+              }`}
+            >
+              <span>👤</span>
+              <span>Customer</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole('WORKER')}
+              className={`py-2.5 px-2 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+                role === 'WORKER'
+                  ? 'bg-gradient-to-r from-rose-500 to-champagne-400 text-navy-950 font-bold shadow-glow-rose'
+                  : 'text-cream-200/70 hover:text-cream-100 hover:bg-navy-800/40'
+              }`}
+            >
+              <span>🛠️</span>
+              <span>Worker</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole('COOPERATIVE_ADMIN')}
+              className={`py-2.5 px-2 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+                role === 'COOPERATIVE_ADMIN'
+                  ? 'bg-gradient-to-r from-champagne-500 to-rose-400 text-navy-950 font-bold shadow-glow-champagne'
+                  : 'text-cream-200/70 hover:text-cream-100 hover:bg-navy-800/40'
+              }`}
+            >
+              <span>🏢</span>
+              <span>Coop Admin</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole('FEDERATION_ADMIN')}
+              className={`py-2.5 px-2 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+                role === 'FEDERATION_ADMIN'
+                  ? 'bg-gradient-to-r from-champagne-500 to-rose-400 text-navy-950 font-bold shadow-glow-champagne'
+                  : 'text-cream-200/70 hover:text-cream-100 hover:bg-navy-800/40'
+              }`}
+            >
+              <span>🏛️</span>
+              <span>Federation</span>
+            </button>
           </div>
 
-          {/* Section 3: Worker Specific Profile Setup */}
-          {role === 'WORKER' && (
-            <div className="space-y-4 pt-3 border-t border-slate-100 bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100">
-              <div className="flex items-center gap-2">
-                <Wrench className="w-4 h-4 text-emerald-600" />
-                <h3 className="text-xs font-bold text-emerald-900 uppercase tracking-wider">
-                  Worker Trade & Competency Profile
-                </h3>
-              </div>
+          {errorMsg && (
+            <div className="p-3.5 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-200 text-xs flex items-center gap-2.5">
+              <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-400" />
+              <span>{errorMsg}</span>
+            </div>
+          )}
 
+          <form onSubmit={handleRegister} className="space-y-5">
+            {/* Section 1: Account Credentials */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold text-champagne-300 uppercase tracking-wider font-display flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-champagne-400" />
+                1. Basic Credentials
+              </h3>
+              
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Profession / Service Category
-                  </label>
-                  <select
-                    value={profession}
-                    onChange={(e) => handleProfessionChange(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  >
-                    {PROFESSIONS.map((p) => (
-                      <option key={p} value={p}>
-                        {p}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Experience (Yrs)
-                    </label>
+                  <label className="block text-xs font-semibold text-cream-200/80 mb-1 font-sans">Full Name</label>
+                  <div className="relative">
+                    <User className="w-4 h-4 text-cream-300/40 absolute left-3 top-3" />
                     <input
-                      type="number"
-                      min={0}
-                      max={40}
-                      value={experienceYears}
-                      onChange={(e) => setExperienceYears(Number(e.target.value))}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      type="text"
+                      required
+                      placeholder="e.g. Ramesh Kumar"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2.5 bg-navy-950/60 border border-navy-700/60 focus:border-champagne-400/80 rounded-xl text-xs text-cream-100 placeholder:text-cream-300/30 focus:outline-none focus:ring-2 focus:ring-champagne-400/20 transition-all font-sans"
                     />
                   </div>
+                </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Hourly Rate (₹)
-                    </label>
+                <div>
+                  <label className="block text-xs font-semibold text-cream-200/80 mb-1 font-sans">Mobile Phone</label>
+                  <div className="relative">
+                    <Phone className="w-4 h-4 text-cream-300/40 absolute left-3 top-3" />
                     <input
-                      type="number"
-                      min={100}
-                      step={25}
-                      value={hourlyRate}
-                      onChange={(e) => setHourlyRate(Number(e.target.value))}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      type="tel"
+                      required
+                      placeholder="+91 98765 43210"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2.5 bg-navy-950/60 border border-navy-700/60 focus:border-champagne-400/80 rounded-xl text-xs text-cream-100 placeholder:text-cream-300/30 focus:outline-none focus:ring-2 focus:ring-champagne-400/20 transition-all font-sans"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Skills checklist & tag selector */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Specific Skills & Proficiencies (Select or type custom)
-                </label>
-                <div className="flex flex-wrap gap-1.5 mb-2">
-                  {(SKILL_SUGGESTIONS[profession] || []).map((skill) => {
-                    const isSelected = selectedSkills.includes(skill);
-                    return (
-                      <button
-                        key={skill}
-                        type="button"
-                        onClick={() => toggleSkill(skill)}
-                        className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors flex items-center gap-1 ${
-                          isSelected
-                            ? 'bg-emerald-600 text-white border-emerald-600'
-                            : 'bg-white text-slate-700 border-slate-200 hover:border-emerald-300'
-                        }`}
-                      >
-                        {isSelected && <CheckCircle2 className="w-3 h-3" />}
-                        <span>{skill}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <input
-                  type="text"
-                  placeholder="Type additional skill and press Enter..."
-                  value={customSkillInput}
-                  onChange={(e) => setCustomSkillInput(e.target.value)}
-                  onKeyDown={handleAddCustomSkill}
-                  className="w-full px-3 py-1.5 border border-slate-300 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-              </div>
-
-              {/* Service Radius & Availability */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Service Radius (km): <span className="text-emerald-700 font-bold">{serviceRadiusKm} km</span>
-                  </label>
-                  <input
-                    type="range"
-                    min={2}
-                    max={30}
-                    value={serviceRadiusKm}
-                    onChange={(e) => setServiceRadiusKm(Number(e.target.value))}
-                    className="w-full accent-emerald-600"
-                  />
-                </div>
-
-                <div className="flex items-center gap-2 pt-3">
-                  <input
-                    type="checkbox"
-                    id="isAvailable"
-                    checked={isAvailable}
-                    onChange={(e) => setIsAvailable(e.target.checked)}
-                    className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
-                  />
-                  <label htmlFor="isAvailable" className="text-xs font-bold text-slate-700 cursor-pointer">
-                    Available for Immediate Gigs (On Duty)
-                  </label>
-                </div>
-              </div>
-
-              {/* About / Bio */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  About You / Work Experience Summary
-                </label>
-                <textarea
-                  rows={2}
-                  placeholder="Describe your practical experience, past projects, or cooperative background..."
-                  value={about}
-                  onChange={(e) => setAbout(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Section 4: Coop Admin Specific Profile Setup */}
-          {role === 'COOPERATIVE_ADMIN' && (
-            <div className="space-y-3 pt-3 border-t border-slate-100 bg-amber-50/50 p-4 rounded-2xl border border-amber-100">
-              <div className="flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-amber-600" />
-                <h3 className="text-xs font-bold text-amber-900 uppercase tracking-wider">
-                  Cooperative Society Details
-                </h3>
-              </div>
-
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Cooperative Society Name</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Lucknow Labour Cooperative Society Ltd."
-                    value={cooperativeName}
-                    onChange={(e) => setCooperativeName(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
+                  <label className="block text-xs font-semibold text-cream-200/80 mb-1 font-sans">Email Address</label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 text-cream-300/40 absolute left-3 top-3" />
+                    <input
+                      type="email"
+                      required
+                      placeholder="name@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2.5 bg-navy-950/60 border border-navy-700/60 focus:border-champagne-400/80 rounded-xl text-xs text-cream-100 placeholder:text-cream-300/30 focus:outline-none focus:ring-2 focus:ring-champagne-400/20 transition-all font-sans"
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Registration Certificate Number</label>
+                  <label className="block text-xs font-semibold text-cream-200/80 mb-1 font-sans">Password</label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-cream-300/40 absolute left-3 top-3" />
+                    <input
+                      type="password"
+                      required
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2.5 bg-navy-950/60 border border-navy-700/60 focus:border-champagne-400/80 rounded-xl text-xs text-cream-100 placeholder:text-cream-300/30 focus:outline-none focus:ring-2 focus:ring-champagne-400/20 transition-all font-sans"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 2: Location Details */}
+            <div className="space-y-3 pt-3 border-t border-navy-800/80">
+              <h3 className="text-xs font-bold text-champagne-300 uppercase tracking-wider font-display flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-champagne-400" />
+                2. Location & Address
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-cream-200/80 mb-1 font-sans">Doorstep / Street Address</label>
+                  <div className="relative">
+                    <MapPin className="w-4 h-4 text-cream-300/40 absolute left-3 top-3" />
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Flat 302, Hazratganj"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2.5 bg-navy-950/60 border border-navy-700/60 focus:border-champagne-400/80 rounded-xl text-xs text-cream-100 placeholder:text-cream-300/30 focus:outline-none focus:ring-2 focus:ring-champagne-400/20 transition-all font-sans"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-cream-200/80 mb-1 font-sans">City</label>
                   <input
                     type="text"
                     required
-                    placeholder="UP-LKO-COOP-2024-001"
-                    value={registrationNumber}
-                    onChange={(e) => setRegistrationNumber(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    className="w-full px-3 py-2.5 bg-navy-950/60 border border-navy-700/60 focus:border-champagne-400/80 rounded-xl text-xs text-cream-100 placeholder:text-cream-300/30 focus:outline-none focus:ring-2 focus:ring-champagne-400/20 transition-all font-sans"
                   />
                 </div>
               </div>
             </div>
-          )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-          >
-            {loading ? (
-              <>
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Creating Account & Setting Up Profile...</span>
-              </>
-            ) : (
-              <span>Complete Registration & Open Dashboard</span>
+            {/* Section 3: Worker Specific Profile Setup */}
+            {role === 'WORKER' && (
+              <div className="space-y-4 pt-3 border-t border-navy-800/80 bg-navy-950/70 p-5 rounded-2xl border border-rose-500/20 animate-fadeIn">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-rose-500/20 text-rose-300">
+                    <Wrench className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-xs font-bold text-rose-300 uppercase tracking-wider font-display">
+                    Worker Trade & Competency Profile
+                  </h3>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-cream-200/80 mb-1 font-sans">
+                      Profession / Service Category
+                    </label>
+                    <select
+                      value={profession}
+                      onChange={(e) => handleProfessionChange(e.target.value)}
+                      className="w-full px-3 py-2.5 bg-navy-900 border border-navy-700/80 rounded-xl text-xs text-cream-100 focus:outline-none focus:border-champagne-400/80"
+                    >
+                      {PROFESSIONS.map((p) => (
+                        <option key={p} value={p} className="bg-navy-900 text-cream-100">
+                          {p}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs font-semibold text-cream-200/80 mb-1 font-sans">
+                        Experience (Yrs)
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        max={40}
+                        value={experienceYears}
+                        onChange={(e) => setExperienceYears(Number(e.target.value))}
+                        className="w-full px-3 py-2.5 bg-navy-900 border border-navy-700/80 rounded-xl text-xs text-cream-100 focus:outline-none focus:border-champagne-400/80"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-cream-200/80 mb-1 font-sans">
+                        Hourly Rate (₹)
+                      </label>
+                      <input
+                        type="number"
+                        min={100}
+                        step={25}
+                        value={hourlyRate}
+                        onChange={(e) => setHourlyRate(Number(e.target.value))}
+                        className="w-full px-3 py-2.5 bg-navy-900 border border-navy-700/80 rounded-xl text-xs text-cream-100 focus:outline-none focus:border-champagne-400/80"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Skills checklist & tag selector */}
+                <div>
+                  <label className="block text-xs font-semibold text-cream-200/80 mb-2 font-sans">
+                    Specific Skills & Proficiencies (Click to toggle)
+                  </label>
+                  <div className="flex flex-wrap gap-1.5 mb-2.5">
+                    {(SKILL_SUGGESTIONS[profession] || []).map((skill) => {
+                      const isSelected = selectedSkills.includes(skill);
+                      return (
+                        <button
+                          key={skill}
+                          type="button"
+                          onClick={() => toggleSkill(skill)}
+                          className={`px-3 py-1 rounded-lg text-xs font-medium border transition-all flex items-center gap-1.5 ${
+                            isSelected
+                              ? 'bg-rose-500/20 text-rose-200 border-rose-400/60 shadow-glow-rose font-bold'
+                              : 'bg-navy-900/60 text-cream-200/60 border-navy-700/60 hover:border-champagne-400/40 hover:text-cream-100'
+                          }`}
+                        >
+                          {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-rose-400" />}
+                          <span>{skill}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <input
+                    type="text"
+                    placeholder="Type additional custom skill and press Enter..."
+                    value={customSkillInput}
+                    onChange={(e) => setCustomSkillInput(e.target.value)}
+                    onKeyDown={handleAddCustomSkill}
+                    className="w-full px-3 py-2 bg-navy-900 border border-navy-700/80 rounded-xl text-xs text-cream-100 placeholder:text-cream-300/30 focus:outline-none focus:border-champagne-400/80"
+                  />
+                </div>
+
+                {/* Service Radius & Availability */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                  <div>
+                    <label className="block text-xs font-semibold text-cream-200/80 mb-1.5 font-sans">
+                      Service Radius: <span className="text-champagne-300 font-bold font-mono">{serviceRadiusKm} km</span>
+                    </label>
+                    <input
+                      type="range"
+                      min={2}
+                      max={30}
+                      value={serviceRadiusKm}
+                      onChange={(e) => setServiceRadiusKm(Number(e.target.value))}
+                      className="w-full accent-rose-500 cursor-pointer"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2.5 pt-2">
+                    <input
+                      type="checkbox"
+                      id="isAvailable"
+                      checked={isAvailable}
+                      onChange={(e) => setIsAvailable(e.target.checked)}
+                      className="w-4 h-4 rounded accent-rose-500 border-navy-700 cursor-pointer"
+                    />
+                    <label htmlFor="isAvailable" className="text-xs font-bold text-cream-200 cursor-pointer">
+                      Available for Immediate Gigs (On Duty)
+                    </label>
+                  </div>
+                </div>
+
+                {/* About / Bio */}
+                <div>
+                  <label className="block text-xs font-semibold text-cream-200/80 mb-1 font-sans">
+                    Work Experience Summary
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="Describe your practical experience, cooperative history, or specialisations..."
+                    value={about}
+                    onChange={(e) => setAbout(e.target.value)}
+                    className="w-full px-3 py-2 bg-navy-900 border border-navy-700/80 rounded-xl text-xs text-cream-100 placeholder:text-cream-300/30 focus:outline-none focus:border-champagne-400/80"
+                  />
+                </div>
+              </div>
             )}
-          </button>
-        </form>
 
-        <p className="text-center text-xs text-slate-500">
-          Already have an account?{' '}
-          <Link href="/login" className="font-bold text-emerald-600 hover:underline">
-            Sign In Here
-          </Link>
-        </p>
+            {/* Section 4: Coop Admin Specific Profile Setup */}
+            {role === 'COOPERATIVE_ADMIN' && (
+              <div className="space-y-3 pt-3 border-t border-navy-800/80 bg-navy-950/70 p-5 rounded-2xl border border-champagne-500/20 animate-fadeIn">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-champagne-500/20 text-champagne-300">
+                    <Building2 className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-xs font-bold text-champagne-300 uppercase tracking-wider font-display">
+                    Cooperative Society Details
+                  </h3>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-cream-200/80 mb-1 font-sans">Cooperative Society Name</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Lucknow Labour Cooperative Society Ltd."
+                      value={cooperativeName}
+                      onChange={(e) => setCooperativeName(e.target.value)}
+                      className="w-full px-3 py-2 bg-navy-900 border border-navy-700/80 rounded-xl text-xs text-cream-100 placeholder:text-cream-300/30 focus:outline-none focus:border-champagne-400/80"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-cream-200/80 mb-1 font-sans">Registration Certificate Number</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="UP-LKO-COOP-2024-001"
+                      value={registrationNumber}
+                      onChange={(e) => setRegistrationNumber(e.target.value)}
+                      className="w-full px-3 py-2 bg-navy-900 border border-navy-700/80 rounded-xl text-xs text-cream-100 placeholder:text-cream-300/30 focus:outline-none focus:border-champagne-400/80"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3.5 bg-gradient-to-r from-rose-500 via-rose-400 to-champagne-400 hover:from-rose-400 hover:to-champagne-300 disabled:opacity-50 text-navy-950 font-black text-sm rounded-xl shadow-glow-rose hover:shadow-glow-champagne transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer font-display"
+            >
+              {loading ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-navy-950 border-t-transparent rounded-full animate-spin" />
+                  <span>Creating Account & Initialising Profile...</span>
+                </>
+              ) : (
+                <>
+                  <span>Complete Registration & Launch Portal</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </form>
+
+          <p className="text-center text-xs text-cream-200/60 font-sans">
+            Already have an account?{' '}
+            <Link href="/login" className="font-bold text-champagne-300 hover:text-champagne-200 underline underline-offset-4 decoration-champagne-400/40 transition-colors">
+              Sign In Here
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

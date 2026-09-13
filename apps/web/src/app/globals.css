@@ -1,15 +1,409 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  /* Default: Warm Cream & Amber Geometric Grid Theme (Ensure Education style) */
+  --bg-primary: #FAF7F2;
+  --text-primary: #1A110D;
+  --text-secondary: #574439;
+  --card-bg: rgba(255, 255, 255, 0.94);
+  --card-border: rgba(217, 119, 6, 0.22);
+  --accent-gold: #B8860B;
+  --accent-rose: #C45A77;
+  --accent-coffee: #4A3024;
+  
+  /* Geometric Grid Tokens - Warm Cream */
+  --grid-line: rgba(190, 135, 75, 0.085);
+  --grid-size: 54px;
+  --ambient-glow-1: rgba(245, 158, 11, 0.14);
+  --ambient-glow-2: rgba(251, 191, 36, 0.06);
+  --badge-bg: #FFF5EA;
+  --badge-border: #F3D2A2;
+  --badge-text: #B45309;
+}
+
+/* Explicit Light Theme */
+html.light,
+html.theme-light,
+html[data-theme="light"] {
+  --bg-primary: #FAF7F2;
+  --text-primary: #1A110D;
+  --text-secondary: #574439;
+  --card-bg: rgba(255, 255, 255, 0.94);
+  --card-border: rgba(217, 119, 6, 0.22);
+  --accent-gold: #B8860B;
+  --accent-rose: #C45A77;
+  --accent-coffee: #4A3024;
+  --grid-line: rgba(190, 135, 75, 0.085);
+  --grid-size: 54px;
+  --ambient-glow-1: rgba(245, 158, 11, 0.14);
+  --ambient-glow-2: rgba(251, 191, 36, 0.06);
+  --badge-bg: #FFF5EA;
+  --badge-border: #F3D2A2;
+  --badge-text: #B45309;
+}
+
+/* Dark Option: Burnt Coffee Luxury Grid Theme */
+html.dark,
+html.theme-coffee,
+html[data-theme="coffee"] {
+  --bg-primary: #120A07;
+  --text-primary: #FDFBF7;
+  --text-secondary: #EFE8DE;
+  --card-bg: rgba(24, 15, 11, 0.85);
+  --card-border: rgba(230, 201, 135, 0.2);
+  --accent-gold: #E6C987;
+  --accent-rose: #E08DA4;
+  --accent-coffee: #281B15;
+  --grid-line: rgba(230, 201, 135, 0.065);
+  --grid-size: 54px;
+  --ambient-glow-1: rgba(230, 201, 135, 0.09);
+  --ambient-glow-2: rgba(224, 141, 164, 0.06);
+  --badge-bg: rgba(230, 201, 135, 0.1);
+  --badge-border: rgba(230, 201, 135, 0.3);
+  --badge-text: #E6C987;
+}
+
+html {
+  scroll-behavior: smooth;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   min-height: 100vh;
+  overflow-x: hidden;
+  background-attachment: fixed;
+  background-image: 
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px),
+    radial-gradient(ellipse 75% 55% at 50% 12%, var(--ambient-glow-1) 0%, transparent 75%),
+    radial-gradient(circle at 10% 40%, rgba(224, 141, 164, 0.06) 0%, transparent 45%),
+    radial-gradient(circle at 90% 65%, var(--ambient-glow-2) 0%, transparent 55%);
+  background-size: 
+    var(--grid-size) var(--grid-size),
+    var(--grid-size) var(--grid-size),
+    100% 100%,
+    100% 100%,
+    100% 100%;
+  background-position: 0 0, 0 0, center top, center center, center center;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Ensure background grid holds cleanly under theme switches */
+html.dark body,
+html.theme-coffee body,
+html[data-theme="coffee"] body {
+  background-color: #120A07;
+  background-image: 
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px),
+    radial-gradient(ellipse 75% 55% at 50% 15%, var(--ambient-glow-1) 0%, transparent 75%),
+    radial-gradient(circle at 15% 35%, var(--ambient-glow-2) 0%, transparent 45%),
+    radial-gradient(circle at 85% 75%, rgba(42, 26, 20, 0.7) 0%, transparent 60%);
+}
+
+html.light body,
+html.theme-light body,
+html[data-theme="light"] body {
+  background-color: #FAF7F2;
+  background-image: 
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px),
+    radial-gradient(ellipse 75% 55% at 50% 12%, var(--ambient-glow-1) 0%, transparent 75%),
+    radial-gradient(circle at 10% 40%, rgba(224, 141, 164, 0.06) 0%, transparent 45%),
+    radial-gradient(circle at 90% 65%, var(--ambient-glow-2) 0%, transparent 55%);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* Custom Luxury Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: #C49A78;
+  border-radius: 9999px;
+  border: 2px solid var(--bg-primary);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #B45309;
+}
+html.dark ::-webkit-scrollbar-thumb {
+  background: #3D271E;
+}
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #E08DA4;
+}
+
+/* 🌟 Grid Overlay Utility */
+.grid-bg-overlay {
+  background-image: 
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size: var(--grid-size) var(--grid-size);
+}
+
+/* 🏷️ Warm Amber Pill Badge (Matches Ensure Education "VALUE PROPOSITION" badge) */
+.pill-badge-amber {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background-color: var(--badge-bg);
+  border: 1px solid var(--badge-border);
+  color: var(--badge-text);
+  box-shadow: 0 1px 3px rgba(217, 119, 6, 0.08);
+}
+
+/* 🪟 Warm Benefit Cards (Matches Ensure Education Cards in Screenshot) */
+.warm-benefit-card {
+  background: linear-gradient(180deg, #FFFFFF 0%, #FFF9F2 100%);
+  border: 1px solid rgba(217, 119, 6, 0.24);
+  border-radius: 1.5rem;
+  padding: 2rem;
+  box-shadow: 0 12px 30px -8px rgba(180, 120, 50, 0.08), 0 2px 6px rgba(0, 0, 0, 0.02);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.warm-benefit-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(217, 119, 6, 0.45);
+  box-shadow: 0 20px 40px -10px rgba(180, 120, 50, 0.15), 0 0 20px -5px rgba(245, 158, 11, 0.2);
+}
+html.dark .warm-benefit-card,
+html.theme-coffee .warm-benefit-card,
+html[data-theme="coffee"] .warm-benefit-card {
+  background: linear-gradient(180deg, rgba(28, 18, 14, 0.85) 0%, rgba(20, 13, 10, 0.95) 100%);
+  border: 1px solid rgba(230, 201, 135, 0.22);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+}
+html.dark .warm-benefit-card:hover,
+html.theme-coffee .warm-benefit-card:hover,
+html[data-theme="coffee"] .warm-benefit-card:hover {
+  border-color: rgba(230, 201, 135, 0.45);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 25px -5px rgba(230, 201, 135, 0.2);
+}
+
+/* Glassmorphic Surfaces */
+.glass-card {
+  background: rgba(26, 17, 13, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(230, 201, 135, 0.2);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.glass-card-hover {
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glass-card-hover:hover {
+  transform: translateY(-4px);
+  border-color: rgba(224, 141, 164, 0.4);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 25px -5px rgba(224, 141, 164, 0.2);
+}
+
+.glass-panel {
+  background: rgba(20, 13, 10, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(230, 201, 135, 0.2);
+}
+
+.glass-pill {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(230, 201, 135, 0.25);
+}
+
+/* Gradient Text Utilities */
+.gradient-text-gold {
+  background: linear-gradient(135deg, #FAF4E8 0%, #E6C987 50%, #C5A059 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-text-rose {
+  background: linear-gradient(135deg, #FDFBF7 0%, #F4AEC0 50%, #E08DA4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-text-hero {
+  background: linear-gradient(135deg, #1A110D 0%, #78350F 40%, #B45309 70%, #D97706 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+html.dark .gradient-text-hero,
+html.theme-coffee .gradient-text-hero,
+html[data-theme="coffee"] .gradient-text-hero {
+  background: linear-gradient(135deg, #FFFFFF 0%, #F5E5C9 35%, #E08DA4 70%, #E6C987 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Shimmer Highlight */
+.shimmer-badge {
+  background: linear-gradient(90deg, rgba(230,201,135,0.08) 0%, rgba(224,141,164,0.18) 50%, rgba(230,201,135,0.08) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 4s infinite linear;
+}
+
+/* ☀️ LIGHT MODE OVERRIDES: Harmonious Soft Cream & Burnt Coffee Contrast */
+html.theme-light,
+html[data-theme="light"],
+html.light {
+  background-color: #FAF7F2 !important;
+  color: #1A110D !important;
+}
+
+html.theme-light body,
+html[data-theme="light"] body,
+html.light body {
+  background-color: #FAF7F2 !important;
+  color: #1A110D !important;
+}
+
+/* Base section and container light mode overrides */
+html.theme-light .bg-navy-950,
+html.theme-light [class*="bg-navy-950"],
+html[data-theme="light"] .bg-navy-950,
+html[data-theme="light"] [class*="bg-navy-950"] {
+  background-color: #F4EFE6 !important;
+  color: #1A110D !important;
+}
+
+html.theme-light .bg-navy-900,
+html.theme-light [class*="bg-navy-900"],
+html[data-theme="light"] .bg-navy-900,
+html[data-theme="light"] [class*="bg-navy-900"] {
+  background-color: #FFFFFF !important;
+  color: #1A110D !important;
+}
+
+html.theme-light .bg-navy-800,
+html.theme-light [class*="bg-navy-800"],
+html[data-theme="light"] .bg-navy-800,
+html[data-theme="light"] [class*="bg-navy-800"] {
+  background-color: #EFE8DC !important;
+  color: #1A110D !important;
+}
+
+/* Typography in light mode */
+html.theme-light .text-cream-100,
+html.theme-light [class*="text-cream-100"],
+html[data-theme="light"] .text-cream-100,
+html[data-theme="light"] [class*="text-cream-100"] {
+  color: #1A110D !important;
+}
+
+html.theme-light .text-cream-200,
+html.theme-light [class*="text-cream-200"],
+html[data-theme="light"] .text-cream-200,
+html[data-theme="light"] [class*="text-cream-200"] {
+  color: #38241B !important;
+}
+
+html.theme-light .text-cream-300,
+html.theme-light [class*="text-cream-300"],
+html[data-theme="light"] .text-cream-300,
+html[data-theme="light"] [class*="text-cream-300"] {
+  color: #5C3A2B !important;
+}
+
+/* Borders in light mode */
+html.theme-light [class*="border-navy-"],
+html[data-theme="light"] [class*="border-navy-"] {
+  border-color: rgba(56, 36, 27, 0.12) !important;
+}
+
+html.theme-light [class*="border-champagne-"],
+html[data-theme="light"] [class*="border-champagne-"] {
+  border-color: rgba(184, 134, 11, 0.22) !important;
+}
+
+/* Glassmorphism in light mode */
+html.theme-light .glass-card,
+html[data-theme="light"] .glass-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(254, 249, 242, 0.92) 100%) !important;
+  border-color: rgba(217, 119, 6, 0.22) !important;
+  box-shadow: 0 15px 35px -10px rgba(180, 120, 50, 0.08), 0 0 1px 1px rgba(217, 119, 6, 0.08) !important;
+  color: #1A110D !important;
+}
+
+html.theme-light .glass-panel,
+html[data-theme="light"] .glass-panel {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(217, 119, 6, 0.18) !important;
+  color: #1A110D !important;
+}
+
+html.theme-light .glass-pill,
+html[data-theme="light"] .glass-pill {
+  background: rgba(217, 119, 6, 0.08) !important;
+  border-color: rgba(217, 119, 6, 0.25) !important;
+  color: #9A3412 !important;
+}
+
+html.theme-light .gradient-text-gold,
+html[data-theme="light"] .gradient-text-gold {
+  background: linear-gradient(135deg, #2A1A14 0%, #8C6615 50%, #B8860B 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+html.theme-light .gradient-text-rose,
+html[data-theme="light"] .gradient-text-rose {
+  background: linear-gradient(135deg, #2A1A14 0%, #B34865 50%, #D96A87 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+html.theme-light input,
+html.theme-light textarea,
+html.theme-light select,
+html[data-theme="light"] input,
+html[data-theme="light"] textarea,
+html[data-theme="light"] select {
+  background-color: #FFFFFF !important;
+  color: #1A110D !important;
+  border-color: rgba(217, 119, 6, 0.25) !important;
+}
+
+html.theme-light input::placeholder,
+html.theme-light textarea::placeholder,
+html[data-theme="light"] input::placeholder,
+html[data-theme="light"] textarea::placeholder {
+  color: rgba(56, 36, 27, 0.45) !important;
+}
+
+/* Accessibility: Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

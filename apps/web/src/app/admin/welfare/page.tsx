@@ -147,102 +147,111 @@ export default function AdminWelfareLedger() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
       {/* Header */}
-      <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-        <div>
+      <div className="relative rounded-3xl p-6 sm:p-8 bg-navy-900/80 backdrop-blur-2xl border border-champagne-500/20 shadow-2xl shadow-navy-950/80 flex flex-col sm:flex-row sm:items-center justify-between gap-6 overflow-hidden">
+        <div className="absolute inset-x-8 top-0 h-[1px] bg-gradient-to-r from-transparent via-champagne-400/30 to-transparent" />
+
+        <div className="relative z-10">
           <Link
             href="/admin/dashboard"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-emerald-700 mb-2 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-champagne-300 hover:text-champagne-200 mb-2 transition-colors font-sans"
           >
             <ArrowLeft className="w-3.5 h-3.5" /> Back to Coop Admin Dashboard
           </Link>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-2xl sm:text-3xl font-black font-display gradient-text-hero">
               Cooperative Welfare Fund Ledger
             </h1>
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">
+            <span className="px-2.5 py-0.5 rounded-full bg-champagne-500/15 text-champagne-300 border border-champagne-400/30 text-xs font-bold font-mono">
               Section 70 Audited
             </span>
           </div>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-cream-200/60 mt-1 font-sans">
             Lucknow Labour Cooperative Society Ltd. • Member-governed 7% social security pool for health, disability, and emergency aid.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 relative z-10">
           <button
             onClick={() => setClaimModalOpen(true)}
-            className="px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 transition-colors shadow"
+            className="px-5 py-3 rounded-2xl bg-gradient-to-r from-rose-500 via-rose-400 to-champagne-400 text-navy-950 font-black text-xs flex items-center gap-2 shadow-glow-rose font-display cursor-pointer"
           >
-            <PlusCircle className="w-4 h-4" /> Disburse Member Claim
+            <PlusCircle className="w-4 h-4 text-navy-950" /> 
+            <span>Disburse Member Claim</span>
           </button>
         </div>
       </div>
 
       {successMsg && (
-        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-between animate-fadeIn">
+        <div className="p-4 rounded-2xl bg-navy-900/90 border border-champagne-400/50 text-champagne-300 text-xs font-bold flex items-center justify-between animate-fadeIn font-sans shadow-lg">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <CheckCircle2 className="w-4 h-4 text-champagne-400" />
             <span>{successMsg}</span>
           </div>
-          <button onClick={() => setSuccessMsg('')} className="text-emerald-600 hover:text-emerald-900">✕</button>
+          <button onClick={() => setSuccessMsg('')} className="text-champagne-400 hover:text-champagne-200">✕</button>
         </div>
       )}
 
       {/* Pool Balance Breakdown Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-6 rounded-3xl shadow-xl space-y-2 border border-slate-700">
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-bold uppercase tracking-wider">Total Pooled Reserve</span>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="relative bg-gradient-to-br from-navy-950 to-espresso-950 text-cream-100 p-6 rounded-3xl shadow-2xl space-y-2 border border-champagne-500/20 overflow-hidden">
+          <div className="absolute inset-x-6 top-0 h-[1px] bg-gradient-to-r from-transparent via-champagne-400/30 to-transparent" />
+          <div className="flex items-center justify-between text-champagne-300">
+            <span className="text-xs font-bold uppercase tracking-wider font-display">Total Pooled Reserve</span>
             <HeartHandshake className="w-5 h-5 text-rose-400" />
           </div>
-          <span className="text-3xl font-black text-emerald-400 font-mono">
+          <span className="text-3xl sm:text-4xl font-black gradient-text-gold font-display font-mono block">
             ₹{balance.toLocaleString()}
           </span>
-          <p className="text-[10px] text-slate-300">
+          <p className="text-[10px] text-cream-300/50 font-sans">
             Backed by 7% mandatory cess on all completed bookings
           </p>
         </div>
 
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-2">
-          <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-semibold">Cashless Health Pool</span>
-            <ShieldCheck className="w-5 h-5 text-emerald-600" />
+        <div className="relative bg-navy-900/80 backdrop-blur-xl p-6 rounded-3xl border border-champagne-500/20 shadow-xl space-y-2 overflow-hidden">
+          <div className="absolute inset-x-6 top-0 h-[1px] bg-gradient-to-r from-transparent via-champagne-400/30 to-transparent" />
+          <div className="flex items-center justify-between text-champagne-300">
+            <span className="text-xs font-bold uppercase tracking-wider font-display">Cashless Health Pool</span>
+            <ShieldCheck className="w-4 h-4 text-champagne-400" />
           </div>
-          <span className="text-2xl font-black text-slate-900">₹50,000</span>
-          <p className="text-[10px] text-slate-500">Per worker family annual limit</p>
+          <span className="text-3xl font-black text-cream-100 font-display block">₹50,000</span>
+          <p className="text-[10px] text-cream-300/50 font-sans">Per worker family annual limit</p>
         </div>
 
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-2">
-          <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-semibold">Accident Cover</span>
-            <AlertCircle className="w-5 h-5 text-amber-500" />
+        <div className="relative bg-navy-900/80 backdrop-blur-xl p-6 rounded-3xl border border-rose-500/20 shadow-xl space-y-2 overflow-hidden">
+          <div className="absolute inset-x-6 top-0 h-[1px] bg-gradient-to-r from-transparent via-rose-400/30 to-transparent" />
+          <div className="flex items-center justify-between text-rose-300">
+            <span className="text-xs font-bold uppercase tracking-wider font-display">Accident Cover</span>
+            <AlertCircle className="w-4 h-4 text-rose-400" />
           </div>
-          <span className="text-2xl font-black text-slate-900">₹2,00,000</span>
-          <p className="text-[10px] text-slate-500">Occupational hazard coverage</p>
+          <span className="text-3xl font-black gradient-text-rose font-display block">₹2,00,000</span>
+          <p className="text-[10px] text-rose-300/70 font-sans">Occupational hazard coverage</p>
         </div>
 
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-2">
-          <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-semibold">Tool Loan Reserve</span>
-            <Receipt className="w-5 h-5 text-blue-600" />
+        <div className="relative bg-navy-900/80 backdrop-blur-xl p-6 rounded-3xl border border-champagne-500/20 shadow-xl space-y-2 overflow-hidden">
+          <div className="absolute inset-x-6 top-0 h-[1px] bg-gradient-to-r from-transparent via-champagne-400/30 to-transparent" />
+          <div className="flex items-center justify-between text-champagne-300">
+            <span className="text-xs font-bold uppercase tracking-wider font-display">Tool Loan Reserve</span>
+            <Receipt className="w-4 h-4 text-champagne-400" />
           </div>
-          <span className="text-2xl font-black text-slate-900">0% Interest</span>
-          <p className="text-[10px] text-slate-500">Zero markup equipment finance</p>
+          <span className="text-3xl font-black text-cream-100 font-display block">0% Interest</span>
+          <p className="text-[10px] text-cream-300/50 font-sans">Zero markup equipment finance</p>
         </div>
       </div>
 
       {/* Transaction Ledger Table */}
-      <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 space-y-4 shadow-sm">
+      <div className="relative bg-navy-900/80 backdrop-blur-xl border border-champagne-500/20 rounded-3xl p-6 sm:p-8 space-y-5 shadow-2xl overflow-hidden">
+        <div className="absolute inset-x-8 top-0 h-[1px] bg-gradient-to-r from-transparent via-champagne-400/30 to-transparent" />
+
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <h2 className="text-lg font-black text-slate-900">Auditable Welfare Transaction Ledger</h2>
-            <p className="text-xs text-slate-500">
+            <h2 className="text-xl font-black text-cream-100 font-display">Auditable Welfare Transaction Ledger</h2>
+            <p className="text-xs text-cream-200/60 font-sans mt-0.5">
               Immutable log of every deposit from customer bookings and member medical disbursements.
             </p>
           </div>
-          <span className="text-xs font-bold text-slate-400">
+          <span className="text-xs font-mono font-bold text-champagne-300">
             {transactions.length} Total Entries
           </span>
         </div>
@@ -250,20 +259,20 @@ export default function AdminWelfareLedger() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
-                <th className="py-3 px-4">Timestamp</th>
-                <th className="py-3 px-4">Type</th>
-                <th className="py-3 px-4">Order / Claim Ref</th>
-                <th className="py-3 px-4">Worker Member</th>
-                <th className="py-3 px-4">Description</th>
-                <th className="py-3 px-4 text-right">Amount (₹)</th>
-                <th className="py-3 px-4 text-right">Balance After</th>
+              <tr className="border-b border-navy-800 text-cream-300/40 font-bold uppercase tracking-wider text-[10px] font-display">
+                <th className="py-3.5 px-4">Timestamp</th>
+                <th className="py-3.5 px-4">Type</th>
+                <th className="py-3.5 px-4">Order / Claim Ref</th>
+                <th className="py-3.5 px-4">Worker Member</th>
+                <th className="py-3.5 px-4">Description</th>
+                <th className="py-3.5 px-4 text-right">Amount (₹)</th>
+                <th className="py-3.5 px-4 text-right">Balance After</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-slate-700">
+            <tbody className="divide-y divide-navy-800/80 text-cream-200/80 font-sans">
               {transactions.map((tx) => (
-                <tr key={tx.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="py-3 px-4 text-slate-500 font-mono text-[11px]">
+                <tr key={tx.id} className="hover:bg-navy-950/60 transition-colors">
+                  <td className="py-3.5 px-4 text-cream-300/50 font-mono text-[11px]">
                     {new Date(tx.timestamp).toLocaleString('en-IN', {
                       day: '2-digit',
                       month: 'short',
@@ -271,32 +280,32 @@ export default function AdminWelfareLedger() {
                       minute: '2-digit',
                     })}
                   </td>
-                  <td className="py-3 px-4">
+                  <td className="py-3.5 px-4">
                     {tx.type === 'DEPOSIT' ? (
-                      <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px]">
+                      <span className="px-2.5 py-0.5 rounded-full bg-champagne-500/15 text-champagne-300 border border-champagne-400/30 font-bold text-[10px] font-mono">
                         + DEPOSIT
                       </span>
                     ) : (
-                      <span className="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 font-bold text-[10px]">
+                      <span className="px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 font-bold text-[10px] font-mono">
                         - DISBURSE
                       </span>
                     )}
                   </td>
-                  <td className="py-3 px-4 font-mono font-semibold text-slate-800">
+                  <td className="py-3.5 px-4 font-mono font-semibold text-cream-100">
                     {tx.bookingId}
                   </td>
-                  <td className="py-3 px-4 font-bold text-slate-900">
+                  <td className="py-3.5 px-4 font-bold text-cream-100 font-display">
                     {tx.workerName}
                   </td>
-                  <td className="py-3 px-4 max-w-xs truncate text-slate-600" title={tx.description}>
+                  <td className="py-3.5 px-4 max-w-xs truncate text-cream-200/70" title={tx.description}>
                     {tx.description}
                   </td>
-                  <td className={`py-3 px-4 text-right font-black text-sm ${
-                    tx.type === 'DEPOSIT' ? 'text-emerald-600' : 'text-rose-600'
+                  <td className={`py-3.5 px-4 text-right font-black text-sm font-mono ${
+                    tx.type === 'DEPOSIT' ? 'text-champagne-300' : 'text-rose-300'
                   }`}>
                     {tx.type === 'DEPOSIT' ? `+₹${tx.amount}` : `-₹${tx.amount}`}
                   </td>
-                  <td className="py-3 px-4 text-right font-mono font-semibold text-slate-900">
+                  <td className="py-3.5 px-4 text-right font-mono font-bold gradient-text-gold">
                     ₹{tx.balanceAfter.toLocaleString()}
                   </td>
                 </tr>
@@ -308,75 +317,79 @@ export default function AdminWelfareLedger() {
 
       {/* DISBURSE CLAIM MODAL */}
       {claimModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-200">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-950/80 backdrop-blur-md animate-fadeIn">
+          <div className="relative bg-navy-900/95 border border-champagne-500/30 rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-6 shadow-2xl">
+            <div className="absolute inset-x-8 top-0 h-[1px] bg-gradient-to-r from-transparent via-champagne-400/40 to-transparent" />
+
+            <div className="flex items-center justify-between border-b border-navy-800 pb-4">
               <div>
-                <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Managing Committee Approval</span>
-                <h3 className="text-xl font-black text-slate-900">Disburse Welfare Claim</h3>
+                <span className="text-[10px] font-bold text-champagne-300 uppercase tracking-wider font-display">
+                  Managing Committee Approval
+                </span>
+                <h3 className="text-xl font-black text-cream-100 font-display">Disburse Welfare Claim</h3>
               </div>
               <button
                 onClick={() => setClaimModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100"
+                className="p-1.5 text-cream-300/60 hover:text-cream-100 rounded-lg hover:bg-navy-800 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-4 text-xs">
+            <div className="space-y-4 text-xs font-sans">
               <div>
-                <label className="font-bold text-slate-700 block mb-1">Beneficiary Member Worker</label>
+                <label className="font-bold text-cream-200/80 block mb-1.5">Beneficiary Member Worker</label>
                 <select
                   value={claimWorkerName}
                   onChange={(e) => setClaimWorkerName(e.target.value)}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl font-bold bg-white text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none"
+                  className="w-full px-3.5 py-2.5 bg-navy-950 border border-navy-700 rounded-xl font-bold text-cream-100 focus:border-champagne-400 outline-none"
                 >
-                  <option value="Ramesh Kumar">Ramesh Kumar (Electrician)</option>
-                  <option value="Suresh Chandra">Suresh Chandra (Plumber)</option>
-                  <option value="Rajesh Verma">Rajesh Verma (Carpenter)</option>
-                  <option value="Sunita Devi">Sunita Devi (Sanitation)</option>
-                  <option value="Amit Kumar">Amit Kumar (AC Technician)</option>
+                  <option value="Ramesh Kumar" className="bg-navy-900">Ramesh Kumar (Electrician)</option>
+                  <option value="Suresh Chandra" className="bg-navy-900">Suresh Chandra (Plumber)</option>
+                  <option value="Rajesh Verma" className="bg-navy-900">Rajesh Verma (Carpenter)</option>
+                  <option value="Sunita Devi" className="bg-navy-900">Sunita Devi (Sanitation)</option>
+                  <option value="Amit Kumar" className="bg-navy-900">Amit Kumar (AC Technician)</option>
                 </select>
               </div>
 
               <div>
-                <label className="font-bold text-slate-700 block mb-1">Claim Type</label>
+                <label className="font-bold text-cream-200/80 block mb-1.5">Claim Type</label>
                 <select
                   value={claimCategory}
                   onChange={(e) => setClaimCategory(e.target.value)}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl font-bold bg-white text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none"
+                  className="w-full px-3.5 py-2.5 bg-navy-950 border border-navy-700 rounded-xl font-bold text-cream-100 focus:border-champagne-400 outline-none"
                 >
-                  <option value="MEDICAL_EMERGENCY">Medical Emergency Outpatient Reimbursement</option>
-                  <option value="ACCIDENT_BENEFIT">On-Site Accident Injury Benefit</option>
-                  <option value="TOOL_REPAIR_GRANT">Safety Equipment & Tool Grant</option>
-                  <option value="EDUCATION_AID">Member Child Education Assistance</option>
+                  <option value="MEDICAL_EMERGENCY" className="bg-navy-900">Medical Emergency Outpatient Reimbursement</option>
+                  <option value="ACCIDENT_BENEFIT" className="bg-navy-900">On-Site Accident Injury Benefit</option>
+                  <option value="TOOL_REPAIR_GRANT" className="bg-navy-900">Safety Equipment & Tool Grant</option>
+                  <option value="EDUCATION_AID" className="bg-navy-900">Member Child Education Assistance</option>
                 </select>
               </div>
 
               <div>
-                <label className="font-bold text-slate-700 block mb-1">Claim Amount (₹)</label>
+                <label className="font-bold text-cream-200/80 block mb-1.5">Claim Amount (₹)</label>
                 <input
                   type="number"
                   value={claimAmount}
                   onChange={(e) => setClaimAmount(e.target.value)}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-xl font-bold bg-white text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none"
+                  className="w-full px-3.5 py-2.5 bg-navy-950 border border-navy-700 rounded-xl font-bold text-cream-100 focus:border-champagne-400 outline-none font-mono"
                 />
               </div>
 
               <div>
-                <label className="font-bold text-slate-700 block mb-1">Audit Notes / Diagnosis</label>
+                <label className="font-bold text-cream-200/80 block mb-1.5">Audit Notes / Diagnosis</label>
                 <textarea
                   rows={2}
                   value={claimDescription}
                   onChange={(e) => setClaimDescription(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-medium bg-white text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none"
+                  className="w-full px-3.5 py-2 bg-navy-950 border border-navy-700 rounded-xl font-medium text-cream-100 focus:border-champagne-400 outline-none"
                 />
               </div>
             </div>
 
             <button
               onClick={handleDisburseClaim}
-              className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl transition-all shadow"
+              className="w-full py-3.5 bg-gradient-to-r from-rose-500 to-champagne-400 text-navy-950 font-black text-xs rounded-xl shadow-glow-rose font-display cursor-pointer"
             >
               Approve & Disburse Funds
             </button>

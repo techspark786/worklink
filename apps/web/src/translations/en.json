@@ -1,6 +1,6 @@
 {
   "nav": {
-    "brand": "SHRAMSETU",
+    "brand": "WorkLink",
     "tagline": "Cooperative Workforce Marketplace",
     "customer": "Customer Portal",
     "worker": "Worker Dashboard",
@@ -11,7 +11,7 @@
     "register": "Join Cooperative"
   },
   "hero": {
-    "badge": "Smart India Hackathon 2026 — Verified Trust Platform",
+    "badge": "Code Craft 3.0 — Verified Trust Platform",
     "title": "Fair Wages. Verified Trust. Owned by Labour Cooperatives.",
     "subtitle": "Connecting households and institutions with certified local service workers backed by Section 70 Labour Cooperatives. 0% Middleman Commission.",
     "bookService": "Book a Verified Worker",

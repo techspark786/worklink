@@ -1,4 +1,5 @@
 import { Router, Response } from 'express';
+import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User, { UserRole } from '../models/User';
@@ -12,13 +13,29 @@ const memoryUsers: any[] = [
   {
     id: 'cust-1',
     name: 'Aarav Sharma',
-    email: 'customer@shramsetu.in',
+    email: 'customer@worklink.in',
     passwordHash: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // 'password'
     role: 'CUSTOMER',
     isVerified: true,
   },
   {
+    id: 'cust-1-legacy',
+    name: 'Aarav Sharma',
+    email: 'customer@shramsetu.in',
+    passwordHash: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+    role: 'CUSTOMER',
+    isVerified: true,
+  },
+  {
     id: 'work-1',
+    name: 'Ramesh Kumar',
+    email: 'worker@worklink.in',
+    passwordHash: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+    role: 'WORKER',
+    isVerified: true,
+  },
+  {
+    id: 'work-1-legacy',
     name: 'Ramesh Kumar',
     email: 'worker@shramsetu.in',
     passwordHash: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
@@ -28,6 +45,14 @@ const memoryUsers: any[] = [
   {
     id: 'admin-1',
     name: 'Sunita Verma',
+    email: 'admin@worklink.in',
+    passwordHash: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+    role: 'COOPERATIVE_ADMIN',
+    isVerified: true,
+  },
+  {
+    id: 'admin-1-legacy',
+    name: 'Sunita Verma',
     email: 'admin@shramsetu.in',
     passwordHash: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
     role: 'COOPERATIVE_ADMIN',
@@ -35,6 +60,14 @@ const memoryUsers: any[] = [
   },
   {
     id: 'fed-1',
+    name: 'Rajesh Shahi',
+    email: 'federation@worklink.in',
+    passwordHash: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+    role: 'FEDERATION_ADMIN',
+    isVerified: true,
+  },
+  {
+    id: 'fed-1-legacy',
     name: 'Rajesh Shahi',
     email: 'federation@shramsetu.in',
     passwordHash: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
@@ -288,8 +321,9 @@ router.get('/me', authenticateJWT, async (req: AuthRequest, res: Response): Prom
   }
 
   try {
-    const user = await User.findById(req.user.id).select('-passwordHash');
-    if (user) {
+    if (mongoose.isValidObjectId(req.user.id)) {
+      const user = await User.findById(req.user.id).select('-passwordHash');
+      if (user) {
       let workerProfile = null;
       if (user.role === 'WORKER') {
         workerProfile = await Worker.findOne({ userId: user._id })
@@ -310,6 +344,7 @@ router.get('/me', authenticateJWT, async (req: AuthRequest, res: Response): Prom
       });
       return;
     }
+  }
   } catch (dbErr) {
     console.warn('DB error fetching current user:', dbErr);
   }

@@ -87,28 +87,28 @@ export default function WorkerEarningsPage() {
   const [selectedInvoice, setSelectedInvoice] = useState<GigPayout | null>(null);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-10">
+    <div className="min-h-screen text-cream-100 p-6 md:p-10">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <Link
               href="/worker/dashboard"
-              className="inline-flex items-center gap-2 text-sm text-emerald-400 hover:text-emerald-300 transition-colors mb-2"
+              className="inline-flex items-center gap-2 text-xs font-bold text-champagne-300 hover:text-champagne-200 transition-colors mb-2 font-sans"
             >
-              <ArrowLeft className="w-4 h-4" /> Back to Worker Dashboard
+              <ArrowLeft className="w-3.5 h-3.5" /> Back to Worker Dashboard
             </Link>
-            <h1 className="text-3xl font-bold flex items-center gap-3">
-              <DollarSign className="w-8 h-8 text-emerald-400" />
+            <h1 className="text-2xl sm:text-3xl font-black font-display gradient-text-hero flex items-center gap-3">
+              <DollarSign className="w-8 h-8 text-champagne-400" />
               Member Earnings & Cooperative Passbook
             </h1>
-            <p className="text-slate-400 text-sm mt-1">
+            <p className="text-cream-200/60 text-xs mt-1 font-sans">
               Ramesh Kumar • Lucknow Labour Cooperative Society Ltd. • Member ID: #COOP-LKO-992
             </p>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
+            <span className="text-xs px-3.5 py-1.5 rounded-full bg-champagne-500/15 text-champagne-300 border border-champagne-400/30 flex items-center gap-1.5 font-display font-bold">
               <ShieldCheck className="w-3.5 h-3.5" /> e-Shram & PMSBY Linked
             </span>
           </div>
@@ -117,55 +117,58 @@ export default function WorkerEarningsPage() {
         {/* Top Earnings & Welfare Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Card 1: Net Take-Home */}
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-900/60 border border-slate-800 space-y-3">
-            <div className="text-xs text-slate-400 font-medium flex justify-between items-center">
-              <span>This Month's Take-Home Earnings</span>
-              <CreditCard className="w-4 h-4 text-emerald-400" />
+          <div className="relative p-6 rounded-3xl bg-navy-900/80 backdrop-blur-xl border border-champagne-500/20 shadow-xl space-y-3 overflow-hidden">
+            <div className="absolute inset-x-8 top-0 h-[1px] bg-gradient-to-r from-transparent via-champagne-400/30 to-transparent" />
+            <div className="text-xs text-champagne-300 font-bold uppercase tracking-wider flex justify-between items-center font-display">
+              <span>This Month's Take-Home</span>
+              <CreditCard className="w-4 h-4 text-champagne-400" />
             </div>
-            <div className="text-3xl font-black text-white">₹18,450</div>
-            <div className="text-xs text-emerald-400 flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4" /> 100% Statutory Fair Wage Guaranteed
+            <div className="text-3xl sm:text-4xl font-black text-cream-100 font-display">₹18,450</div>
+            <div className="text-xs text-champagne-300 flex items-center gap-1.5 font-sans">
+              <CheckCircle2 className="w-4 h-4" /> 100% Fair Wage Guaranteed
             </div>
           </div>
 
           {/* Card 2: 7% Welfare Passbook */}
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-purple-950/30 to-slate-900 border border-purple-500/20 space-y-3">
-            <div className="text-xs text-purple-300 font-medium flex justify-between items-center">
-              <span>Your Section 70 Welfare Reserve</span>
-              <ShieldCheck className="w-4 h-4 text-purple-400" />
+          <div className="relative p-6 rounded-3xl bg-navy-900/80 backdrop-blur-xl border border-rose-500/20 shadow-xl space-y-3 overflow-hidden">
+            <div className="absolute inset-x-8 top-0 h-[1px] bg-gradient-to-r from-transparent via-rose-400/30 to-transparent" />
+            <div className="text-xs text-rose-300 font-bold uppercase tracking-wider flex justify-between items-center font-display">
+              <span>Section 70 Welfare Pool</span>
+              <ShieldCheck className="w-4 h-4 text-rose-400" />
             </div>
-            <div className="text-3xl font-black text-purple-200">₹1,291.50</div>
-            <div className="text-xs text-purple-300 flex items-center gap-1.5">
+            <div className="text-3xl sm:text-4xl font-black gradient-text-rose font-display">₹1,291.50</div>
+            <div className="text-xs text-rose-300/80 flex items-center gap-1.5 font-sans">
               <span>7% auto-accrued for health & emergency relief</span>
             </div>
           </div>
 
           {/* Card 3: Cooperative Commission Comparison */}
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-blue-950/30 to-slate-900 border border-blue-500/20 space-y-3">
-            <div className="text-xs text-blue-300 font-medium flex justify-between items-center">
+          <div className="relative p-6 rounded-3xl bg-navy-900/80 backdrop-blur-xl border border-champagne-500/20 shadow-xl space-y-3 overflow-hidden">
+            <div className="absolute inset-x-8 top-0 h-[1px] bg-gradient-to-r from-transparent via-champagne-400/30 to-transparent" />
+            <div className="text-xs text-champagne-300 font-bold uppercase tracking-wider flex justify-between items-center font-display">
               <span>Middleman Commission Saved</span>
-              <Sparkles className="w-4 h-4 text-blue-400" />
+              <Sparkles className="w-4 h-4 text-champagne-400" />
             </div>
-            <div className="text-3xl font-black text-blue-200">₹4,612.50</div>
-            <div className="text-xs text-slate-400">
-              Money kept in your family instead of 25% aggregator cut
+            <div className="text-3xl sm:text-4xl font-black gradient-text-gold font-display">₹4,612.50</div>
+            <div className="text-xs text-cream-200/60 font-sans">
+              Retained in your family instead of 25% aggregator deduction
             </div>
           </div>
         </div>
 
         {/* Bank & Payout Destination */}
-        <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-slate-800 text-slate-300">
-              <Building2 className="w-5 h-5 text-emerald-400" />
+        <div className="relative p-5 rounded-2xl bg-navy-900/80 backdrop-blur-xl border border-champagne-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
+          <div className="flex items-center gap-3.5">
+            <div className="p-2.5 rounded-xl bg-champagne-500/15 text-champagne-300">
+              <Building2 className="w-5 h-5" />
             </div>
             <div>
-              <div className="font-semibold text-white">Direct Benefit Transfer (DBT) Account</div>
-              <div className="text-slate-400">Bank of Baroda • A/c: •••• •••• 4091 • IFSC: BARB0HAZRAT</div>
+              <div className="font-bold text-cream-100 font-display">Direct Benefit Transfer (DBT) Account</div>
+              <div className="text-cream-200/60 font-mono mt-0.5">Bank of Baroda • A/c: •••• •••• 4091 • IFSC: BARB0HAZRAT</div>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-semibold">
+            <span className="px-3 py-1 rounded-full bg-champagne-500/15 text-champagne-300 border border-champagne-400/30 font-bold font-mono">
               Instant T+0 Settlement
             </span>
           </div>
@@ -174,44 +177,44 @@ export default function WorkerEarningsPage() {
         {/* Payout History & Invoices */}
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <FileText className="w-5 h-5 text-emerald-400" />
+            <h2 className="text-lg font-black text-cream-100 font-display flex items-center gap-2">
+              <FileText className="w-5 h-5 text-champagne-400" />
               Settled Gigs & Digital Tax Invoices
             </h2>
-            <span className="text-xs text-slate-400">3 recent payouts shown</span>
+            <span className="text-xs text-cream-300/50 font-mono">3 recent payouts shown</span>
           </div>
 
           <div className="space-y-3">
             {PAST_GIGS.map((gig) => (
               <div
                 key={gig.id}
-                className="p-5 rounded-xl bg-slate-900/60 border border-slate-800/80 hover:border-slate-700 transition-all flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+                className="p-5 rounded-2xl bg-navy-900/80 backdrop-blur-xl border border-champagne-500/15 hover:border-champagne-400/40 transition-all flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
               >
                 <div className="space-y-1">
                   <div className="flex items-center gap-2.5">
-                    <span className="font-mono text-xs font-bold text-emerald-400">{gig.bookingRef}</span>
-                    <span className="text-xs text-slate-400">• {gig.date}</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold">
+                    <span className="font-mono text-xs font-bold text-champagne-300">{gig.bookingRef}</span>
+                    <span className="text-xs text-cream-300/50">• {gig.date}</span>
+                    <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-champagne-500/15 text-champagne-300 border border-champagne-400/30 font-bold font-mono">
                       {gig.payoutStatus}
                     </span>
                   </div>
-                  <div className="text-sm font-semibold text-white">{gig.service}</div>
-                  <div className="text-xs text-slate-400">
-                    Customer: <span className="text-slate-300">{gig.customer}</span> • Ref: {gig.utrNumber}
+                  <div className="text-sm font-semibold text-cream-100 font-display">{gig.service}</div>
+                  <div className="text-xs text-cream-200/60 font-sans">
+                    Customer: <span className="text-cream-100">{gig.customer}</span> • Ref: <span className="font-mono">{gig.utrNumber}</span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-4 self-end sm:self-center">
                   <div className="text-right">
-                    <div className="text-base font-bold text-emerald-400">+₹{gig.netPayout}</div>
-                    <div className="text-[11px] text-slate-500">Gross: ₹{gig.grossAmount} (Cess: ₹{gig.welfareCess})</div>
+                    <div className="text-base font-bold gradient-text-gold font-mono">+₹{gig.netPayout}</div>
+                    <div className="text-[11px] text-cream-300/40 font-mono">Gross: ₹{gig.grossAmount} (Cess: ₹{gig.welfareCess})</div>
                   </div>
 
                   <button
                     onClick={() => setSelectedInvoice(gig)}
-                    className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"
+                    className="px-4 py-2 bg-navy-950 hover:bg-navy-800 text-cream-100 border border-navy-700 hover:border-champagne-400/40 rounded-xl text-xs font-bold flex items-center gap-2 transition-all font-display"
                   >
-                    <Printer className="w-3.5 h-3.5 text-emerald-400" /> View Invoice
+                    <Printer className="w-3.5 h-3.5 text-champagne-400" /> View Invoice
                   </button>
                 </div>
               </div>
@@ -221,80 +224,82 @@ export default function WorkerEarningsPage() {
 
         {/* Printable Invoice Modal */}
         {selectedInvoice && (
-          <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-scale-up">
+          <div className="fixed inset-0 z-50 bg-navy-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+            <div className="relative bg-navy-900/95 border border-champagne-500/30 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-5">
+              <div className="absolute inset-x-8 top-0 h-[1px] bg-gradient-to-r from-transparent via-champagne-400/40 to-transparent" />
+
               {/* Modal Header */}
-              <div className="flex justify-between items-start border-b border-slate-800 pb-4">
+              <div className="flex justify-between items-start border-b border-navy-800 pb-4">
                 <div>
-                  <div className="text-xs text-emerald-400 font-bold tracking-wider uppercase">
+                  <div className="text-xs text-champagne-300 font-bold tracking-wider uppercase font-display">
                     Cooperative Digital Service Invoice
                   </div>
-                  <h3 className="text-lg font-bold text-white mt-0.5">
+                  <h3 className="text-lg font-black text-cream-100 mt-0.5 font-display">
                     Invoice #{selectedInvoice.bookingRef}
                   </h3>
                 </div>
                 <button
                   onClick={() => setSelectedInvoice(null)}
-                  className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
+                  className="p-1.5 text-cream-300/60 hover:text-cream-100 rounded-lg hover:bg-navy-800 transition-colors"
                 >
                   <XCircle className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Invoice Body */}
-              <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-3 text-xs">
-                <div className="flex justify-between border-b border-slate-800/80 pb-2">
-                  <span className="text-slate-400">Issuing Cooperative:</span>
-                  <strong className="text-white">Lucknow Labour Cooperative Society Ltd.</strong>
+              <div className="p-4 bg-navy-950 rounded-2xl border border-champagne-500/15 space-y-3 text-xs">
+                <div className="flex justify-between border-b border-navy-800 pb-2">
+                  <span className="text-cream-300/50 font-sans">Issuing Cooperative:</span>
+                  <strong className="text-cream-100 font-display">Lucknow Labour Cooperative Society Ltd.</strong>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Cooperative Registration:</span>
-                  <span className="text-slate-300">UP-COOP-LKO-4401 (Section 70 Act)</span>
+                  <span className="text-cream-300/50 font-sans">Registration Number:</span>
+                  <span className="text-cream-200 font-mono">UP-COOP-LKO-4401 (Section 70 Act)</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Technician:</span>
-                  <span className="text-slate-300">Ramesh Kumar (Level 4 Certified)</span>
+                  <span className="text-cream-300/50 font-sans">Technician:</span>
+                  <span className="text-cream-200">Ramesh Kumar (Level 4 Certified)</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Customer:</span>
-                  <span className="text-slate-300">{selectedInvoice.customer}</span>
+                  <span className="text-cream-300/50 font-sans">Customer:</span>
+                  <span className="text-cream-200">{selectedInvoice.customer}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Service Rendered:</span>
-                  <span className="text-slate-300">{selectedInvoice.service}</span>
+                  <span className="text-cream-300/50 font-sans">Service Rendered:</span>
+                  <span className="text-cream-200">{selectedInvoice.service}</span>
                 </div>
-                <div className="flex justify-between border-t border-slate-800/80 pt-2">
-                  <span className="text-slate-400">Doorstep Start OTP Handshake:</span>
-                  <strong className="text-emerald-400 font-mono">Verified [{selectedInvoice.startOtp}]</strong>
+                <div className="flex justify-between border-t border-navy-800 pt-2">
+                  <span className="text-cream-300/50 font-sans">Start OTP Handshake:</span>
+                  <strong className="text-champagne-300 font-mono">Verified [{selectedInvoice.startOtp}]</strong>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Customer Completion Handshake:</span>
-                  <strong className="text-emerald-400 font-mono">Verified [{selectedInvoice.completionOtp}]</strong>
+                  <span className="text-cream-300/50 font-sans">Completion Handshake:</span>
+                  <strong className="text-rose-300 font-mono">Verified [{selectedInvoice.completionOtp}]</strong>
                 </div>
               </div>
 
               {/* Price Breakdown Table */}
               <div className="space-y-2 text-xs">
-                <div className="flex justify-between text-slate-400">
+                <div className="flex justify-between text-cream-200/70 font-sans">
                   <span>Base Fair Wage (100% to Member):</span>
-                  <span className="text-white font-medium">₹{selectedInvoice.grossAmount}.00</span>
+                  <span className="text-cream-100 font-mono font-medium">₹{selectedInvoice.grossAmount}.00</span>
                 </div>
-                <div className="flex justify-between text-purple-300">
-                  <span>Section 70 Cooperative Welfare Cess (7%):</span>
-                  <span>-₹{selectedInvoice.welfareCess}.00</span>
+                <div className="flex justify-between text-rose-300 font-sans">
+                  <span>Section 70 Welfare Cess (7%):</span>
+                  <span className="font-mono">-₹{selectedInvoice.welfareCess}.00</span>
                 </div>
-                <div className="flex justify-between text-emerald-400 font-bold border-t border-slate-800 pt-2 text-sm">
+                <div className="flex justify-between text-champagne-300 font-bold border-t border-navy-800 pt-2 text-sm font-display">
                   <span>Net Direct Bank Deposit:</span>
-                  <span>₹{selectedInvoice.netPayout}.00</span>
+                  <span className="font-mono">₹{selectedInvoice.netPayout}.00</span>
                 </div>
               </div>
 
-              <div className="p-3 bg-slate-950/80 rounded-lg border border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+              <div className="p-3 bg-navy-950 rounded-xl border border-champagne-500/15 flex items-center justify-between text-[11px] text-cream-200/70 font-sans">
                 <div className="flex items-center gap-2">
-                  <QrCode className="w-5 h-5 text-emerald-400" />
-                  <span>Digitally Signed & Blockchain-ready by ShramSetu Protocol</span>
+                  <QrCode className="w-5 h-5 text-champagne-400" />
+                  <span>Digitally Signed & Blockchain-ready by WorkLink Protocol</span>
                 </div>
-                <span className="text-emerald-400 font-mono">PAID</span>
+                <span className="text-champagne-300 font-mono font-bold">PAID</span>
               </div>
 
               {/* Modal Actions */}
@@ -302,16 +307,16 @@ export default function WorkerEarningsPage() {
                 <button
                   type="button"
                   onClick={() => setSelectedInvoice(null)}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium"
+                  className="px-4 py-2.5 bg-navy-950 hover:bg-navy-800 text-cream-200/80 border border-navy-700 rounded-xl text-xs font-bold font-display"
                 >
                   Close
                 </button>
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-emerald-950/40"
+                  className="px-5 py-2.5 bg-gradient-to-r from-rose-500 to-champagne-400 text-navy-950 rounded-xl text-xs font-black flex items-center gap-2 shadow-glow-rose font-display"
                 >
-                  <Printer className="w-3.5 h-3.5" /> Print / Save PDF
+                  <Printer className="w-4 h-4 text-navy-950" /> Print / Save PDF
                 </button>
               </div>
             </div>

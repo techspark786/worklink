@@ -57,8 +57,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     try {
-      const savedToken = localStorage.getItem('shramsetu_token');
-      const savedUserStr = localStorage.getItem('shramsetu_user');
+      const savedToken = localStorage.getItem('worklink_token') || localStorage.getItem('shramsetu_token');
+      const savedUserStr = localStorage.getItem('worklink_user') || localStorage.getItem('shramsetu_user');
 
       if (savedToken && savedUserStr) {
         const parsedUser = JSON.parse(savedUserStr);
@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (data?.user) {
               const refreshed = { ...data.user, workerProfile: data.workerProfile || data.user.workerProfile };
               setUser(refreshed);
-              localStorage.setItem('shramsetu_user', JSON.stringify(refreshed));
+              localStorage.setItem('worklink_user', JSON.stringify(refreshed));
             }
           })
           .catch(() => {
@@ -92,8 +92,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(newToken);
     setUser(newUser);
     try {
-      localStorage.setItem('shramsetu_token', newToken);
-      localStorage.setItem('shramsetu_user', JSON.stringify(newUser));
+      localStorage.setItem('worklink_token', newToken);
+      localStorage.setItem('worklink_user', JSON.stringify(newUser));
     } catch (e) {
       console.error('Failed to persist auth state:', e);
     }
@@ -103,6 +103,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(null);
     setUser(null);
     try {
+      localStorage.removeItem('worklink_token');
+      localStorage.removeItem('worklink_user');
       localStorage.removeItem('shramsetu_token');
       localStorage.removeItem('shramsetu_user');
       sessionStorage.clear();
@@ -123,7 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (data.user) {
           const updated = { ...data.user, workerProfile: data.workerProfile || data.user.workerProfile };
           setUser(updated);
-          localStorage.setItem('shramsetu_user', JSON.stringify(updated));
+          localStorage.setItem('worklink_user', JSON.stringify(updated));
         }
       }
     } catch (err) {

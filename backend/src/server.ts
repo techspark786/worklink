@@ -28,7 +28,7 @@ app.use(express.json());
 app.get('/api/health', (_req, res) => {
   res.json({
     status: 'OK',
-    app: 'ShramSetu Backend API',
+    app: 'WorkLink Backend API',
     version: '1.0.0',
     timestamp: new Date().toISOString(),
   });
@@ -45,7 +45,7 @@ app.use('/api/reviews', reviewRouter);
 app.use('/api/ai', aiRoutes);
 
 app.listen(PORT, () => {
-  console.log(`🚀 [ShramSetu Backend] Server running on http://localhost:${PORT}`);
+  console.log(`🚀 [WorkLink Backend] Server running on http://localhost:${PORT}`);
 });
 
 export default app;
