@@ -1,9 +1,10 @@
-# 🛠️ SHRAMSETU (श्रमसेतु)
+# 🛠️ WORKLINK (Code Craft 3.0 / ShramSetu)
 ### Cooperative-Powered Local Workforce & Community Services Marketplace
 
-> **Smart India Hackathon (SIH) 2026**
+> **Live Website:** [https://techspark786.github.io/worklink/](https://techspark786.github.io/worklink/)  
+> **Repository:** [https://github.com/techspark786/worklink](https://github.com/techspark786/worklink)
 
-**ShramSetu** is a cooperative-owned digital service marketplace platform that enables Labour Cooperative Federations and Labour Cooperative Societies to provide verified household and community services while ensuring fair wages, worker welfare, and consumer trust.
+**WorkLink** is a cooperative-owned digital service marketplace platform that enables Labour Cooperative Federations and Labour Cooperative Societies to provide verified household and community services while ensuring fair wages, worker welfare, and consumer trust.
 
 ---
 
