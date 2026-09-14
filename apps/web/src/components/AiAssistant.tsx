@@ -209,41 +209,37 @@ export default function AiAssistant() {
 
     let assistantMsg: ChatMessage | null = null;
 
-    // Tier 1: Try Next.js internal App Router endpoint (/api/ai/chat)
-    try {
-      const res = await fetch('/api/ai/chat/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text }),
-      });
+    // Determine if on static GitHub Pages deployment
+    const isStaticSite = typeof window !== 'undefined' && (
+      window.location.hostname.includes('github.io') ||
+      window.location.protocol === 'file:'
+    );
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data && (data.response || data.diagnosis)) {
-          assistantMsg = {
-            id: `a-${Date.now()}`,
-            sender: 'assistant',
-            text: data.response || `We recommend a certified ${data.diagnosis?.detectedTrade || 'worker'}.`,
-            diagnosis: data.diagnosis,
-            suggestedActions: data.suggestedActions,
-            isEmergency: data.isEmergency || data.diagnosis?.recommendedUrgency === 'EMERGENCY_45_MIN',
-            source: data.source || 'nextjs_api',
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          };
-        }
-      }
-    } catch (tier1Err) {
-      // Tier 1 failed or offline, fall through to Tier 2
-    }
-
-    // Tier 2: Try Backend API endpoint (${API_BASE_URL}/ai/chat)
-    if (!assistantMsg) {
+    if (isStaticSite) {
+      // Instant Client-Side AI Engine on GitHub Pages (Zero lag, zero failure)
+      const clientResult = handleConversationalQuery(text);
+      assistantMsg = {
+        id: `a-${Date.now()}`,
+        sender: 'assistant',
+        text: clientResult.response,
+        diagnosis: clientResult.diagnosis,
+        suggestedActions: clientResult.suggestedActions,
+        isEmergency: clientResult.isEmergency,
+        source: 'client_engine',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+    } else {
+      // Try Backend API endpoint (${API_BASE_URL}/ai/chat)
       try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 2500);
         const res = await fetch(`${API_BASE_URL}/ai/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: text }),
+          signal: controller.signal,
         });
+        clearTimeout(timeout);
 
         if (res.ok) {
           const data = await res.json();
@@ -260,24 +256,24 @@ export default function AiAssistant() {
             };
           }
         }
-      } catch (tier2Err) {
-        // Tier 2 failed or offline, fall through to Tier 3
+      } catch (backendErr) {
+        // Backend offline, fall through to client engine
       }
-    }
 
-    // Tier 3: Zero-Failure Client-Side AI Engine (Guarantees it never crashes or fails)
-    if (!assistantMsg) {
-      const clientResult = handleConversationalQuery(text);
-      assistantMsg = {
-        id: `a-${Date.now()}`,
-        sender: 'assistant',
-        text: clientResult.response,
-        diagnosis: clientResult.diagnosis,
-        suggestedActions: clientResult.suggestedActions,
-        isEmergency: clientResult.isEmergency,
-        source: 'client_engine',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      };
+      // Zero-Failure Client-Side AI Engine Fallback
+      if (!assistantMsg) {
+        const clientResult = handleConversationalQuery(text);
+        assistantMsg = {
+          id: `a-${Date.now()}`,
+          sender: 'assistant',
+          text: clientResult.response,
+          diagnosis: clientResult.diagnosis,
+          suggestedActions: clientResult.suggestedActions,
+          isEmergency: clientResult.isEmergency,
+          source: 'client_engine',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        };
+      }
     }
 
     setMessages((prev) => [...prev, assistantMsg!]);
